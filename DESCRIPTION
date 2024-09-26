@@ -3,3 +3,6 @@ Type: Package
 Title: BSAI crab fishery data summary
 Version: 0.01
 RoxygenNote: 7.2.3
+Author: Tyer Jackson
+Imports:
+	tidyverse
