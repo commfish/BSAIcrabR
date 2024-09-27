@@ -8,5 +8,6 @@ Imports:
     dplyr,
     lubridate,
     magrittr,
+    readr,
     tibble,
     tidyr
