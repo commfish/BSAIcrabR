@@ -1,0 +1,26 @@
+{
+    "id": "8399A1F1",
+    "path": "~/adfg_crab_observer/misc/code/custom_functions.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1727310569362.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "950,22",
+        "scrollLine": "0"
+    },
+    "folds": "13|38|16|71|\n17|37|36|0|\n37|44|39|0|\n40|37|44|0|\n45|21|198|0|\n199|8|283|0|\n284|17|304|0|\n305|23|376|0|\n377|23|494|0|\n495|15|648|0|\n649|9|659|2|\n660|14|668|0|\n669|31|721|2|\n722|12|860|0|\n861|22|945|0|\n959|57|965|2|\n966|57|974|2|\n",
+    "lastKnownWriteTime": 1727310835,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1727310835699,
+    "read_only": false,
+    "read_only_alternatives": []
+}

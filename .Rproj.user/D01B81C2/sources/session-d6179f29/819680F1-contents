@@ -1,0 +1,20 @@
+roxygen2::roxygenise()
+
+devtools::install_github("commfish/BSAIcrabR")
+
+roxygen2::roxygenise(clean = TRUE)
+library(BSAIcrabR)
+
+add_crab_year(tibble(fishery  = "QO18", sampdate = "7/2/19"), date_correct = T)
+
+library(devtools)
+
+# Add a dependency
+use_package('readr')
+
+# (Re-)build NAMESPACE
+document()
+
+# Reload the package: CTRL-L or
+load_all()
+

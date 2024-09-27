@@ -1,0 +1,1020 @@
+# notes ----
+# functions for preparation of adfg bsai crab fishery data
+
+# author: Tyler Jackson
+# last update: 6/6/2023 (or see most recent commit)
+
+# dependencies ----
+if (!require("tidyverse", quiet = T)) {install.packages("tidyverse"); library(tidyverse)}
+if (!require("lubridate", quiet = T)) {install.packages("lubridate"); library(lubridate)}
+if (!require("here", quiet = T)) {install.packages("here"); library(here)}
+if (!require("readxl", quiet = T)) {install.packages("readxl"); library(readxl)}
+if (!require("modi", quiet = T)) {install.packages("modi"); library(modi)}
+
+# background data for shell condition ----
+## shell condition levels
+shell_levels <- c("molting", "soft", "new_pliable",
+                  "new", "old", "very_old", "very_very_old", "unknown")
+# background data for f_sdr function ----
+## character 1
+tibble(code_1 = c("A", "D", "E", "H", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "C", "X"),
+       management_area = c("southeastern_alaska", "yakutat", "prince_william_sound", 
+                           "cook_inlet", "kodiak", "chignik", "alaska_peninsula", "norton_cound",
+                           "dutch_harbor", "pribilof_islands", "bering_sea", "adak",
+                           "st_matthew_island", "bristol_bay", "cdq_fishery", "test_fishery")) -> char_1
+## character 2
+tibble(code_2 = c("A", "B", "C", "D", "G", "H", "K", "M", "N", "O", "P", "R", "S", "T", "U"),
+       target = c("triangle_tanner_crab", "golden_king_crab", "scarlet_king_crab",
+                  "dungeness_crab", "grooved_tanner_crab", "hair_crab", "red_and_blue_king_crab",
+                  "paralomis_multispina", "snails", "snow_crab", "blue_king_crab",
+                  "red_king_crab", "weathervane_scallop", "tanner_crab", "giant_octopus")) -> char_2
+
+## year characters
+tibble(code_3 = sprintf("%02d", 0:99),
+       crab_year = ifelse(as.numeric(code_3) < 50, 
+                             as.numeric(code_3) + 2000, 
+                             as.numeric(code_3) + 1900)) -> char_yr
+
+# background data for f_average_wt function ----
+params <- read_csv(here::here("misc/data", "weight_parameters.csv"))
+
+# background data for f_legal_status ----
+tibble(spcode = c(932, 931, 931, 921, 923),
+       fishery_area = c(NA, "E166", "W166", NA, NA),
+       legal_size_mm = c(78, 121, 111, 135, 124)) -> legal_size
+
+# f_fish_code_adjust ----
+f_fish_code_adjust <- function(x, type) {
+  ## get file species
+  spp <- unique(x$spcode)
+  
+  ## rkc dockside file
+  if(spp == 921 & type == "dockside"){
+    x %>%
+      # cdq and test bbrkc rkc fisheries to TR
+      mutate(fishery = gsub("XR|CR", "TR", fishery)) %>% 
+      # filter EI and QT fisheries in early 90s by stat areas e166
+      # filter(!(fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea > 660000 | statarea < 0))) %>%
+      # combine all tanner e166 fishery codes
+      mutate(fishery = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96))), 
+                              paste0("QT", substring(fishery, 3, 4)),
+                              fishery)) -> tmp
+    # mutate(fishery = ifelse(fishery %in% c("EI91", "EI92", paste0("QT", 93:96)), gsub("EI|QT", "TT", fishery), fishery)) -> tmp
+  }
+  
+  ## snow dockside file
+  if(spp == 932 & type == "dockside") {
+    x %>%
+      # adjust year based on sample date so that fisheries prosecuted in spring get previous year code
+      mutate(fishery_adj = ifelse((month(ymd(sampdate)) < 7 & (substring(year(ymd(sampdate)), 3, 4) == substring(fishery, 3, 4))),
+                                  paste0(substring(fishery, 1, 2), substring(year(ymd(sampdate)) - 1, 3, 4)),
+                                  fishery),
+             # fix transition to rationalization yr
+             fishery_adj = gsub("QO05r", "QO05", fishery_adj),
+             # cdq and eo fisheries to QO
+             fishery_adj = gsub("CO|EO", "QO", fishery_adj),
+             # bbrkc test fish and cdq fisheries to TR
+             fishery_adj = gsub("XR|CR", "TR", fishery_adj),
+             # early tanner crab fisheries to QT or TT based on e166 line
+             fishery_adj = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96))), 
+                                  paste0("QT", substring(fishery_adj, 3, 4)),
+                                  fishery_adj),
+             # fisheries without any dates in dockside data (make hard change)
+             fishery_adj = ifelse(fishery %in% c("EO91", "EO92"), 
+                                  paste0(substring(fishery_adj, 1, 2), 
+                                         as.numeric(substring(fishery_adj, 3, 4))-1),
+                                  fishery_adj)) %>%
+      # fishery_adj = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea > 660000 | statarea < 0)),
+      #                      paste0("QT", substring(fishery_adj, 3, 4)),
+      #                      fishery_adj),
+      # fishery_adj = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea <= 660000 | statarea >= 0)),
+      #                      paste0("TT", substring(fishery_adj, 3, 4)),
+      #                      fishery_adj)) %>%
+      # replace fishery with fishery_adj
+      mutate(fishery = fishery_adj) %>%
+      dplyr::select(-fishery_adj) -> tmp
+  }
+  
+  # tanner dockside file
+  if(spp == 931 & type == "dockside"){
+    x  %>%
+      # adjust year based on sample date so that fisheries prosecuted in spring get previous year code
+      mutate(fishery_adj = ifelse((month(ymd(sampdate)) < 7 & substring(year(ymd(sampdate)), 3, 4) == substring(fishery, 3, 4)),
+                                  paste0(substring(fishery, 1, 2), substring(year(ymd(sampdate)) - 1, 3, 4)),
+                                  fishery),
+             # fix transition to rationalization yr
+             fishery_adj = gsub("QO05r", "QO05", fishery_adj),
+             # cdq and eo fisheries to QO
+             fishery_adj = gsub("CO|EO", "QO", fishery_adj),
+             # bbrkc test fish and cdq fisheries to TR
+             fishery_adj = gsub("XR|CR", "TR", fishery_adj),
+             # early tanner crab fisheries to QT or TT based on e166 line
+             fishery_adj = ifelse((fishery %in% c("EI89", "EI90", "EI91", "EI92", paste0("QT", 93:96))), 
+                                  paste0("QT", substring(fishery_adj, 3, 4)),
+                                  fishery_adj),
+             # fisheries without any dates in dockside data (make hard change)
+             fishery_adj = ifelse(fishery %in% c("EO91", "EO92"), 
+                                  paste0(substring(fishery_adj, 1, 2), 
+                                         as.numeric(substring(fishery_adj, 3, 4))-1),
+                                  fishery_adj)) %>%
+      #fishery_adj = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea > 660000 | statarea < 0)),
+      # paste0("QT", substring(fishery_adj, 3, 4)),
+      # fishery_adj),
+      #fishery_adj = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea <= 660000 | statarea >= 0)),
+      # paste0("TT", substring(fishery_adj, 3, 4)),
+      # fishery_adj)) %>%
+      # replace fishery with fishery_adj
+      mutate(fishery = fishery_adj) %>%
+      dplyr::select(-fishery_adj) -> tmp
+  }
+  
+  ## rkc obs dump files
+  if(spp == 921 & type == "obs"){
+    x %>%
+      # cdq and test bbrkc rkc fisheries to TR
+      mutate(fishery = gsub("XR|CR", "TR", fishery)) %>% 
+      # filter EI and QT fisheries in early 90s by stat areas e166
+      filter(!(fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea > 660000 | statarea < 0))) %>%
+      # combine all tanner e166 fishery codes
+      mutate(fishery = ifelse(fishery %in% c("EI91", "EI92", paste0("QT", 93:96)), gsub("EI|QT", "TT", fishery), fishery)) -> tmp
+  }
+  
+  ## snow obs dump files
+  if(spp == 932 & type == "obs") {
+    x %>%
+      # adjust year based on sample date so that fisheries prosecuted in spring get previous year code
+      mutate(fishery_adj = ifelse((month(mdy(sampdate)) < 7 & (substring(year(mdy(sampdate)), 3, 4) == substring(fishery, 3, 4))),
+                                  paste0(substring(fishery, 1, 2), substring(year(mdy(sampdate)) - 1, 3, 4)),
+                                  fishery),
+             # fix transition to rationalization yr
+             fishery_adj = gsub("QO05r", "QO05", fishery_adj),
+             # cdq and eo fisheries to QO
+             fishery_adj = gsub("CO|EO", "QO", fishery_adj),
+             # cdq rkc and bkc fisheries to PIBKC
+             fishery_adj = gsub("CK", "QP", fishery_adj),
+             # bbrkc test fish and cdq fisheries to TR
+             fishery_adj = gsub("XR|CR", "TR", fishery_adj),
+             # early tanner crab fisheries to QT or TT based on e166 line
+             fishery_adj = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea > 660000 | statarea < 0)),
+                                  paste0("QT", substring(fishery_adj, 3, 4)),
+                                  fishery_adj),
+             fishery_adj = ifelse((fishery %in% c("EI91", "EI92", paste0("QT", 93:96)) & (statarea <= 660000 | statarea >= 0)),
+                                  paste0("TT", substring(fishery_adj, 3, 4)),
+                                  fishery_adj)) %>%
+      # replace fishery with fishery_adj
+      mutate(fishery = fishery_adj) %>%
+      dplyr::select(-fishery_adj) -> tmp
+  }
+  
+  # tanner obs dump files
+  if(spp == 931 & type == "obs"){
+    x  %>%
+      # adjust year based on sample date so that fisheries prosecuted in spring get previous year code
+      mutate(fishery_adj = ifelse((month(mdy(sampdate)) < 7 & substring(year(mdy(sampdate)), 3, 4) == substring(fishery, 3, 4)),
+                                  paste0(substring(fishery, 1, 2), substring(year(mdy(sampdate)) - 1, 3, 4)),
+                                  fishery),
+             # fix transition to rationalization yr
+             fishery_adj = gsub("QO05r", "QO05", fishery_adj),
+             # cdq and eo fisheries to QO
+             fishery_adj = gsub("CO|EO", "QO", fishery_adj),
+             # cdq rkc and bkc fisheries to PIBKC
+             fishery_adj = gsub("CK", "QP", fishery_adj),
+             # bbrkc test fish and cdq fisheries to TR
+             fishery_adj = gsub("XR|CR", "TR", fishery_adj),
+             # early tanner crab fisheries to QT or TT based on e166 line
+             fishery_adj = ifelse((fishery %in% c("EI89", "EI90", "EI91", "EI92", paste0("QT", 93:96)) & (statarea > 660000 | statarea < 0)),
+                                  paste0("QT", substring(fishery_adj, 3, 4)),
+                                  fishery_adj),
+             fishery_adj = ifelse((fishery %in% c("EI89", "EI90", "EI91", "EI92", paste0("QT", 93:96)) & (statarea <= 660000 | statarea >= 0)),
+                                  paste0("TT", substring(fishery_adj, 3, 4)),
+                                  fishery_adj)) %>%
+      # replace fishery with fishery_adj
+      mutate(fishery = fishery_adj) %>%
+      dplyr::select(-fishery_adj) -> tmp
+  }
+  
+  tmp
+  
+}
+
+# f_sdr ----
+# custom function for 'uncoding' fishery, shell condition and legal status codes into readily understandable text 
+# argument: x   - data frame or tibble containing a code column
+#           col - name of column with code. 
+#           type - data type (i.e., "fishery_code", "shell_condition", "legal", "sex" code).
+f_sdr <- function(x, col, type){
+  
+  colnames <- names(x)
+  
+  if(type == "fishery_code") {
+    x %>%
+      pull(grep(col, names(.))) %>%
+      tibble(fishery = .) %>%
+      # add codes
+      mutate(code_1 = str_sub(fishery, 1, 1),
+             code_2 = str_sub(fishery, 2, 2),
+             code_3 = str_sub(fishery, 3, 4)) %>%
+      # add to textual data
+      left_join(char_1, by = "code_1") %>%
+      left_join(char_2, by = "code_2") %>%
+      left_join(char_yr, by = "code_3") %>%
+      # fix issue with historical fishery codes
+      mutate(management_area = ifelse((crab_year <= 1995 & code_1 == "E"), 
+                                      "eastern_bering_sea", management_area),
+             management_area = ifelse((crab_year <= 1995 & code_1 == "W"), 
+                                      "western_bering_sea", management_area),
+             target = ifelse((crab_year <= 1995 & code_2 == "I"), 
+                             "tanner_crab", target)) %>%
+      dplyr::select(-fishery, -code_1, -code_2, -code_3) %>%
+      bind_cols(x) %>%
+      dplyr::select(colnames[grep(col, colnames)], management_area, target, crab_year,
+                    colnames[-grep(col, colnames)]) -> tmp
+  } 
+  if(type == "shell_condition"){
+    x %>%
+      pull(grep(col, names(.))) %>%
+      tibble(shell = .) %>%
+      # add text
+      mutate(shell_text = case_when(shell == 0 ~ "molting",
+                                    shell == 1 ~ "soft", 
+                                    shell == 9 ~ "new_pliable",
+                                    shell == 2 ~ "new",
+                                    shell == 3 ~ "old",
+                                    shell == 4 ~ "very_old",
+                                    shell == 5 ~ "very_very_old",
+                                    shell == -9 ~ "unknown")) %>%
+      dplyr::select(-shell) %>%
+      bind_cols(x, .) %>%
+      dplyr::select(1:grep(col, colnames), shell_text, (grep(col, colnames) + 1):length(colnames)) -> tmp
+ 
+  }
+  if(type == "legal"){
+    x %>%
+      pull(grep(col, names(.))) %>%
+      tibble(legal = .) %>%
+      # add text
+      mutate(legal_text = case_when(legal == 0 ~ "sublegal",
+                                    legal == 1 ~ "legal_retained", 
+                                    legal == 2 ~ "legal_not_retained",
+                                    legal == 3 ~ "legal_illegaly_retained",
+                                    legal == 6 ~ "legal_retained_unknown",
+                                    legal == -7 ~ "female")) %>%
+      dplyr::select(-legal) %>%
+      bind_cols(x, .) %>%
+      dplyr::select(1:grep(col, colnames), legal_text, (grep(col, colnames) + 1):length(colnames)) -> tmp
+  }
+  if(type == "sex"){
+    x %>%
+      pull(grep(col, names(.))) %>%
+      tibble(sex = .) %>%
+      # add text
+      mutate(sex_text = case_when(sex == 0 ~ "unknown",
+                                  sex == 1 ~ "male", 
+                                  sex == 2 ~ "female",
+                                  sex == 3 ~ "hermaphrodite")) %>%
+      dplyr::select(-sex) %>%
+      bind_cols(x, .) %>%
+      dplyr::select(1:grep(col, colnames), sex_text, (grep(col, colnames) + 1):length(colnames)) -> tmp
+    
+  }
+  tmp
+}
+
+
+
+# f_legal_status ----
+# assign legal size status based on sex, size, location (E166, W166 tanner crab)
+# args: x - any data frame contains the fields "size", "spcode", and "fishery" (fishery code) for tanner crab only
+f_legal_status <- function(x){
+  if(unique(x$spcode) == 931){
+    x %>%
+      mutate(fishery_area = ifelse(substring(fishery, 1, 2) %in% c("TT", "TR", "XR"), 
+                                   "E166", "W166")) %>% 
+      left_join(legal_size, by = c("spcode", "fishery_area")) %>%
+      mutate(legal_size_mm = ifelse(as.numeric(substring(fishery, 3, 4)) %in% c(0:10, 80:99), 140, legal_size_mm),
+             legal_status = ifelse((sex == 1 & size >= legal_size_mm), T, F)) %>%
+      dplyr::select(-legal_size_mm, -fishery_area) -> tmp
+  } else {
+    x %>%
+      left_join(legal_size, by = c("spcode")) %>%
+      mutate(legal_status = ifelse((sex == 1 & size >= legal_size_mm), T, F)) %>%
+      dplyr::select(-legal_size_mm, -fishery_area) -> tmp
+  }
+  tmp
+}
+
+# f_retained_size_comp ----
+# dockside sampling size composition by shell condition
+# argument: x - dockside sampling data for a species by fishery. 
+#           lump - T/F. If true, shell codnitions 0, 1, 2 & 9 are "new" and 3 - 5 are "old". Default = F.
+f_retained_size_comp <- function(x, lump = F) {
+  if(lump == F & !("subdistrict" %in% names(x))) {
+    x %>%
+      filter(!is.na(shell),
+             shell != -9) %>%
+      group_by(fishery, size, shell) %>%
+      summarise(numcrab = sum(numcrab)) %>%
+      f_sdr(x = ., col = "shell", type = "shell_condition") %>%
+      dplyr::select(-shell) %>%
+      pivot_wider(names_from = shell_text, values_from = numcrab) %>%
+      replace(is.na(.), 0) %>%
+      # add fishery name
+      f_sdr(., col = "fishery", type = "fishery_code") %>%
+      # reorder columns 
+      dplyr::select(1:5, shell_levels[which(shell_levels %in% names(.))]) -> tmp
+  } 
+  if(lump == T & !("subdistrict" %in% names(x))) {
+    x %>%
+      filter(!is.na(shell),
+             shell != -9) %>%
+      mutate(shell_lump = case_when(shell %in% c(0:2, 9) ~ 2,
+                                    shell %in% c(3:5) ~ 3)) %>%
+      group_by(fishery, size, shell_lump) %>%
+      summarise(numcrab = sum(numcrab)) %>%
+      f_sdr(x = ., col = "shell_lump", type = "shell_condition") %>%
+      dplyr::select(-shell_lump) %>%
+      pivot_wider(names_from = shell_text, values_from = numcrab) %>%
+      replace(is.na(.), 0) %>%
+      # add fishery name
+      f_sdr(., col = "fishery", type = "fishery_code") %>%
+      # reorder columns
+      dplyr::select(1:5, shell_levels[which(shell_levels %in% names(.))])-> tmp
+  }
+  if(lump == F & ("subdistrict" %in% names(x))) {
+    x %>%
+      filter(!is.na(shell),
+             shell != -9) %>%
+      group_by(fishery, subdistrict, size, shell) %>%
+      summarise(numcrab = sum(numcrab)) %>%
+      f_sdr(x = ., col = "shell", type = "shell_condition") %>%
+      dplyr::select(-shell) %>%
+      pivot_wider(names_from = shell_text, values_from = numcrab) %>%
+      replace(is.na(.), 0) %>%
+      # add fishery name
+      f_sdr(., col = "fishery", type = "fishery_code") %>%
+      # reorder columns 
+      dplyr::select(1:6, shell_levels[which(shell_levels %in% names(.))]) -> tmp
+  } 
+  if(lump == T & !("subdistrict" %in% names(x))) {
+    x %>%
+      filter(!is.na(shell),
+             shell != -9) %>%
+      mutate(shell_lump = case_when(shell %in% c(0:2, 9) ~ 2,
+                                    shell %in% c(3:5) ~ 3)) %>%
+      group_by(fishery, subdistrict, size, shell_lump) %>%
+      summarise(numcrab = sum(numcrab)) %>%
+      f_sdr(x = ., col = "shell_lump", type = "shell_condition") %>%
+      dplyr::select(-shell_lump) %>%
+      pivot_wider(names_from = shell_text, values_from = numcrab) %>%
+      replace(is.na(.), 0) %>%
+      # add fishery name
+      f_sdr(., col = "fishery", type = "fishery_code") %>%
+      # reorder columns
+      dplyr::select(1:6, shell_levels[which(shell_levels %in% names(.))])-> tmp
+  }
+  tmp
+}
+
+# f_observer_size_comp ----
+# observer measure pot size composition by sex, shell condition, and/or legal status
+# args: x - raw observer measure data for a given species in each fishery it was encountered in
+#       by - numeric option denoting which delimiting characteristics to use. 1: sex, 2: sex & shell condition, 3: sex, shell condition & legal status
+#       lump - T/F. If true, shell conditions 0, 1, 2 & 9 are "new" and 3 - 5 are "old". No Default.
+#            
+f_observer_size_comp <- function(x, by, lump){
+  if(by == 1){
+    x %>%
+      dplyr::select(fishery, sex, size, shell, legal) %>%
+      count(fishery, sex, size) %>%
+      rename(count = n) %>%
+      f_sdr(x =., col = "sex", type = "sex") %>%
+      dplyr::select(-sex) %>%
+      pivot_wider(names_from = sex_text, values_from = count) %>%
+      replace_na(list(male = 0, female = 0, unknown = 0, hermaphrodite = 0)) %>%
+      f_sdr(x =., col = "fishery", type = "fishery_code") -> tmp
+  }
+  if(by == 2 & missing(lump)){stop("Must provide T/F on whether to lump shell conditions into new/old.")}
+  if(by == 2 & lump == F){
+    
+    if(!("subdistrict" %in% names(x))) {
+    x %>%
+      mutate(shell = ifelse(is.na(shell), -9, shell)) %>%
+      dplyr::select(fishery, sex, size, shell, legal) %>%
+      count(fishery, sex, size, shell) %>%
+      rename(count = n) %>%
+      f_sdr(x =., col = "shell", type = "shell_condition") %>%
+      f_sdr(x = ., col = "sex", type = "sex") %>%
+      dplyr::select(-sex, -shell) %>%
+      pivot_wider(names_from = shell_text, values_from = count) %>%
+      replace_na(list(new = 0, new_pliable = 0, soft = 0, old = 0, 
+                      very_old = 0, very_very_old = 0, molting = 0,
+                      unknown = 0)) %>%
+      rename(sex = sex_text) %>%
+      f_sdr(x =., col = "fishery", type = "fishery_code") %>%
+      # reorder the shell conditions
+      dplyr::select(1:6, shell_levels[which(shell_levels %in% names(.))]) -> tmp
+    }
+    if(("subdistrict" %in% names(x))) {
+      x %>%
+        mutate(shell = ifelse(is.na(shell), -9, shell)) %>%
+        count(fishery, subdistrict, sex, size, shell) %>%
+        rename(count = n) %>%
+        f_sdr(x =., col = "shell", type = "shell_condition") %>%
+        f_sdr(x = ., col = "sex", type = "sex") %>%
+        dplyr::select(-sex, -shell) %>%
+        pivot_wider(names_from = shell_text, values_from = count) %>%
+        replace_na(list(new = 0, new_pliable = 0, soft = 0, old = 0, 
+                        very_old = 0, very_very_old = 0, molting = 0,
+                        unknown = 0)) %>%
+        rename(sex = sex_text) %>%
+        f_sdr(x =., col = "fishery", type = "fishery_code") %>%
+        # reorder the shell conditions
+        dplyr::select(1:7, shell_levels[which(shell_levels %in% names(.))]) -> tmp
+    }
+  }
+  if(by == 2 & lump == T){
+    x %>%
+      mutate(shell = ifelse(is.na(shell), -9, shell)) %>%
+      mutate(shell_lump = case_when(shell %in% c(0:2, 9) ~ 2,
+                                    shell %in% c(3:5) ~ 3,
+                                    shell == -9 ~ -9)) %>%
+      dplyr::select(fishery, sex, size, shell_lump, legal) %>%
+      count(fishery, sex, size, shell_lump) %>%
+      rename(count = n) %>%
+      f_sdr(x = ., col = "shell", type = "shell_condition") %>%
+      f_sdr(x = ., col = "sex", type = "sex") %>%
+      dplyr::select(-sex, -shell_lump) %>%
+      pivot_wider(names_from = shell_text, values_from = count) %>%
+      replace_na(list(new = 0, old = 0, unknown = 0)) %>%
+      rename(sex = sex_text) %>%
+      f_sdr(x =., col = "fishery", type = "fishery_code") %>%
+      # reorder the shell conditions
+      dplyr::select(1:6, shell_levels[which(shell_levels %in% names(.))]) -> tmp
+  }
+  if(by == 3 & lump == F){
+    x %>%
+      mutate(shell = ifelse(is.na(shell), -9, shell)) %>%
+      dplyr::select(fishery, spcode, sex, size,  shell) %>%
+      count(fishery, spcode, sex, size, shell) %>%
+      rename(count = n) %>%
+      f_sdr(x =., col = "shell", type = "shell_condition") %>%
+      f_sdr(x = ., col = "sex", type = "sex") %>%
+      f_legal_status() %>%
+      dplyr::select(-sex, -shell) %>%
+      pivot_wider(names_from = shell_text, values_from = count) %>%
+      replace_na(list(new = 0, new_pliable = 0, soft = 0, old = 0, 
+                      very_old = 0, very_very_old = 0, molting = 0, unknown = 0)) %>%
+      rename(sex = sex_text) %>%
+      f_sdr(x =., col = "fishery", type = "fishery_code") %>%
+      # reorder the shell conditions
+      dplyr::select(1:4, 6, 8, 7, shell_levels[which(shell_levels %in% names(.))]) -> tmp
+  }
+  if(by == 3 & lump == T){
+    x %>%
+      mutate(shell = ifelse(is.na(shell), -9, shell)) %>%
+      mutate(shell_lump = case_when(shell %in% c(0:2, 9) ~ 2,
+                                    shell %in% c(3:5) ~ 3,
+                                    shell == -9 ~ -9)) %>%
+      dplyr::select(fishery, spcode, sex, size, shell_lump) %>%
+      count(fishery, spcode, sex, size, shell_lump) %>%
+      rename(count = n) %>%
+      f_sdr(x =., col = "shell_lump", type = "shell_condition") %>%
+      f_sdr(x = ., col = "sex", type = "sex") %>%
+      f_legal_status() %>%
+      dplyr::select(-sex, -shell_lump) %>%
+      pivot_wider(names_from = shell_text, values_from = count) %>%
+      replace_na(list(new = 0,  old = 0, unknown = 0)) %>%
+      rename(sex = sex_text) %>%
+      f_sdr(x =., col = "fishery", type = "fishery_code") %>%
+      # reorder the shell conditions
+      dplyr::select(1:4, 6, 8, 7, shell_levels[which(shell_levels %in% names(.))]) -> tmp
+  }
+  tmp
+}
+
+
+# f_average_wt ----
+# get average weight by a crab (by sex and maturity status) in each fishery in which it was 
+# encountered. Codes are left as is. Output is meant to be joined for data pipeline using codes.
+# If grouping by sex and shell condition, shell condition is ALWAYS lumped to new and old.
+# args: x - raw observer measure pot data for a given species in each fishery it was encountered in
+#       by - numeric option denoting which delimiting characteristics to use. 1: sex, 2: sex and shell condition, 3: sex, shell condition, and legal status, 4: sex and legal status
+#       legal_code - Logical. If TRUE, legal designations are based on observer stick measures (1 / 0) instead of size, species, and location (Tanner crab)
+#       units - "kg" or "lbs". Default = "kg"
+f_average_wt <- function(x, by, legal_code = T, units = "kg"){
+
+  ## add maturity group text column
+  ### RKC, BKC, GKC
+  if(unique(x$spcode) %in% 921:923){
+    x %>%
+    mutate(maturity = case_when(sex == 1 ~ "male",
+                                sex == 2 & size >= 90 ~ "mature", 
+                                sex == 2 & size < 90 ~ "immature")) -> x
+  } 
+  ### snow and tanner crab
+  if(unique(x$spcode) %in% 931:932){
+    x %>%
+      mutate(maturity = case_when(sex == 1 ~ "male",
+                                  sex == 2 & (maturity == 1 | clutch > 0) ~ "mature", 
+                                  sex == 2 & (maturity == 0 | clutch <= 0) ~ "immature")) -> x
+  }
+  
+  if(by == 1){
+    x %>%
+      # remove females that are maturity information
+      filter(!(sex == 2 & is.na(maturity))) %>%
+      dplyr::select(fishery, stock, sex, spcode, size, shell, maturity) %>%
+      count(fishery, stock, sex, spcode, size, maturity) %>%
+      rename(count = n) %>%
+      # join to growth parameters
+      left_join(params, by = c("sex", "spcode", "maturity", "stock")) %>%
+      # estimate calculated weight
+      mutate(calc_wt_kg = (alpha * as.numeric(size)^beta) / 1000) %>%
+      group_by(fishery, sex) %>%
+      summarise(avg_wt = weighted.mean(calc_wt_kg, w = count),
+                avg_wt_var = modi::weighted.var(calc_wt_kg, w = count) / sum(count)) -> tmp
+  }
+  if(by == 2){
+    x %>%
+      # remove females that are missing maturity information and all individuals missing shell height information
+      filter(!(sex == 2 & is.na(maturity)),
+             !is.na(shell),
+             shell != -9) %>%
+      mutate(shell_lump = case_when(shell %in% c(0:2, 9) ~ 2,
+                                    shell %in% c(3:5) ~ 3)) %>%
+      dplyr::select(fishery, sex, spcode, size, shell_lump, maturity) %>%
+      count(fishery, sex, spcode, size, shell_lump, maturity) %>%
+      rename(count = n) %>%
+      # join to growth parameters
+      left_join(params, by = c("sex", "spcode", "maturity", "stock")) %>%
+      # estimate calculated weight
+      mutate(calc_wt_kg = (alpha * as.numeric(size)^beta) / 1000) %>%
+      group_by(fishery, sex, shell_lump) %>%
+      summarise(avg_wt = weighted.mean(calc_wt_kg, w = count),
+                avg_wt_var = modi::weighted.var(calc_wt_kg, w = count) / sum(count)) -> tmp
+  }
+  if(by == 3){
+    if(legal_code == T){
+      x %>%
+        # remove females that are missing maturity information and all individuals missing shell height information
+        filter(!(sex == 2 & is.na(maturity)),
+               !is.na(shell),
+               shell != -9,
+               !is.na(legal)) %>%
+        # fix legal designation
+        mutate(legal_status = case_when(legal %in% c(0, -7) ~ 0,
+                                      legal %in% 1:6 ~ 1),
+               legal_status = ifelse(legal_status == -9, NA, legal_status),
+               shell_lump = case_when(shell %in% c(0:2, 9) ~ 2,
+                                      shell %in% c(3:5) ~ 3)) %>%
+        filter(!is.na(legal_status)) %>%
+        count(fishery, sex, spcode, size, shell_lump, maturity, legal_status) %>%
+        rename(count = n) %>%
+        # join to growth parameters
+        left_join(params, by = c("sex", "spcode", "maturity", "stock")) %>%
+        # estimate calculated weight
+        mutate(calc_wt_kg = (alpha * as.numeric(size)^beta) / 1000) %>%
+        group_by(fishery, sex, shell_lump, legal_status) %>%
+        summarise(avg_wt = weighted.mean(calc_wt_kg, w = count),
+                  avg_wt_var = modi::weighted.var(calc_wt_kg, w = count) / sum(count)) %>%
+        mutate(legal_status = legal_status == 1) -> tmp
+    }
+    if(legal_code == F){
+      x %>%
+        # remove females that are missing maturity information and all individuals missing shell height information
+        filter(!(sex == 2 & is.na(maturity)),
+               !is.na(shell),
+               shell != -9) %>%
+        mutate(shell_lump = case_when(shell %in% c(0:2, 9) ~ 2,
+                                      shell %in% c(3:5) ~ 3)) %>%
+        dplyr::select(fishery, sex, spcode, size, shell_lump, maturity) %>%
+        f_legal_status() %>%
+        count(fishery, sex, spcode, size, shell_lump, maturity, legal_status) %>%
+        rename(count = n) %>%
+        # join to growth parameters
+        left_join(params, by = c("sex", "spcode", "maturity", "stock")) %>%
+        # estimate calculated weight
+        mutate(calc_wt_kg = (alpha * as.numeric(size)^beta) / 1000) %>%
+        group_by(fishery, sex, shell_lump, legal_status) %>%
+        summarise(avg_wt = weighted.mean(calc_wt_kg, w = count),
+                  avg_wt_var = modi::weighted.var(calc_wt_kg, w = count) / sum(count)) -> tmp
+    }
+  }
+  
+  if(by == 4){
+    if(legal_code == T){
+      x %>%
+        # remove females that are missing maturity information and all individuals missing shell height information
+        filter(!(sex == 2 & is.na(maturity)),
+               !is.na(legal)) %>%
+        # fix legal designation
+        mutate(legal_status = case_when(legal %in% c(0, -7) ~ 0,
+                                        legal %in% 1:6 ~ 1),
+               legal_status = ifelse(legal_status == -9, NA, legal_status)) %>%
+        filter(!is.na(legal_status)) %>%
+        count(fishery, stock, sex, spcode, size, maturity, legal_status) %>%
+        rename(count = n) %>%
+        # join to growth parameters
+        left_join(params, by = c("sex", "spcode", "maturity", "stock")) %>% 
+        # estimate calculated weight
+        mutate(calc_wt_kg = (alpha * as.numeric(size)^beta) / 1000) %>%
+        group_by(fishery, sex, legal_status) %>%
+        summarise(avg_wt = weighted.mean(calc_wt_kg, w = count),
+                  avg_wt_var = modi::weighted.var(calc_wt_kg, w = count) / sum(count)) -> tmp
+    }
+    if(legal_code == F){
+      x %>%
+        # remove females that are maturity information
+        filter(!(sex == 2 & is.na(maturity))) %>%
+        dplyr::select(fishery, sex, spcode, size, maturity) %>%
+        f_legal_status() %>%
+        count(fishery, stock, sex, spcode, size, maturity, legal_status) %>%
+        rename(count = n) %>%
+        # join to growth parameters
+        left_join(params, by = c("sex", "spcode", "maturity", "stock")) %>%
+        # estimate calculated weight
+        mutate(calc_wt_kg = (alpha * as.numeric(size)^beta) / 1000) %>%
+        group_by(fishery, sex, legal_status) %>%
+        summarise(avg_wt = weighted.mean(calc_wt_kg, w = count),
+                  avg_wt_var = modi::weighted.var(calc_wt_kg, w = count) / sum(count)) -> tmp
+    }
+  }
+  if(units == "lbs"){
+    tmp$avg_wt <- tmp$avg_wt * 2.2046226218
+    tmp$avg_wt_var <- tmp$avg_wt_var * 2.2046226218^2
+  }
+  tmp
+}
+
+
+# f_sday ----
+# coerce sample date into day of season.
+# args: x - sample date in the format MM-/DD-/YYYY
+#       y - Julian date for start of season in a non-leap year. Default is October 15, 288.
+f_sday <- function(x, y = 288){
+  case_when((year(mdy(x)) %in% seq(0, 100000, 4) & yday(mdy(x)) > (y)) ~ yday(mdy(x)) - (y),
+            (year(mdy(x)) %in% seq(0, 100000, 4) & yday(mdy(x)) <= (y)) ~ yday(mdy(x)) + 366 - (y),
+            (!(year(mdy(x)) %in% seq(0, 100000, 4)) & yday(mdy(x)) > (y - 1)) ~ yday(mdy(x)) - (y - 1),
+            (!(year(mdy(x)) %in% seq(0, 100000, 4)) & yday(mdy(x)) <= (y - 1))  ~ yday(mdy(x)) + 365 - (y - 1))
+}
+  
+# f_stat_week ----
+# assign ADF&G statistical week to date
+# args: x - sample date in the format MM-/DD-/YYYY
+f_stat_week <- function(x){
+  case_when(epiweek(mdy(paste0("1-1-", year(mdy(x))))) > 50 ~ ifelse(month(mdy(x)) == 1 & epiweek(mdy(x)) > 50, 1, epiweek(mdy(x)) + 1),
+            epiweek(mdy(paste0("1-1-", year(mdy(x))))) == 1 ~ epiweek(mdy(x)))
+  
+}
+
+# f_unpack_fish_ticket_summary ----
+# read and combine excel sheet fish ticket reports by statarea provided by Dutch Harbor ADF&G
+# args: dir - path to directory with Excel files
+
+f_unpack_fish_ticket_summary <- function(dir) { 
+  
+  # list file names
+  tibble(file = list.files(dir, full.names = T)) %>%
+    # extract fishery sheets
+    mutate(fishery = purrr::map(file, excel_sheets)) %>%
+    unnest(fishery)  %>%
+    # unpack sheets
+    mutate(data = purrr::map2(file, fishery, function(file, fishery) {
+      
+      # read data
+      read_excel(file, sheet = fishery) -> out
+      
+      # if there is data, retain only data contains rows of excel sheet, fix names
+      if(nrow(out) > 0 & ncol(out) == 11) {
+        out %>%
+          rename_at(1, ~"v1") %>%
+          filter(str_count(v1, "[0-9]") == 6) %>%
+          rename_all(~c("stat_area", "vessels", "landings", "live_number", "live_lbs", "deadloss_number", "deadloss_lbs", "pots", "cpue", "avg_wt", "price_per_lb")) %>%
+          mutate_all(., as.numeric) -> out
+      }
+      
+      if(nrow(out) > 0 & ncol(out) == 10) {
+        out %>%
+          rename_at(1, ~"v1") %>%
+          filter(str_count(v1, "[0-9]") == 6) %>%
+          rename_all(~c("stat_area", "vessels", "live_number", "live_lbs", "deadloss_number", "deadloss_lbs", "pots", "cpue", "avg_wt", "price_per_lb")) %>%
+          mutate_all(., as.numeric) -> out
+      }
+      # if there is no data, make a missing data row
+      if(nrow(out) >= 0 & ncol(out) < 10) {
+        matrix(ncol = 11, nrow = 1) %>%
+          as_tibble(.name_repair = "unique") %>%
+          rename_all(~c("stat_area", "vessels", "landings", "live_number", "live_lbs", "deadloss_number", "deadloss_lbs", "pots", "cpue", "avg_wt", "price_per_lb")) %>%
+          mutate_all(., as.numeric) -> out
+      }
+      
+      return(out)
+      
+    })) %>%
+    unnest(data) %>%
+    dplyr::select(-file) %>%
+    mutate_at(3:ncol(.), as.numeric) -> x
+  
+  return(x)
+  
+}
+
+  
+# f_ft_link ----
+# link fish ticket dump to observer count and measure pot data (aigkc only)
+# adapted from code "Auto_output_2023.txt" by W. Gaeuman
+# args: ft - fish ticket data dump from ocean ak
+#       pot_sum - all year count pot data dump
+#       obs_meas - all year measure pot data dump
+
+f_ft_link <- function(ft, pot_sum, obs_meas) {
+  
+  # adapted from code "Auto_output_2023.txt" by W. Gaeuman
+  # fish ticket data dump ----
+  ft %>%
+    janitor::clean_names() %>%
+    # list by season and do procedure
+    nest_by(season, .keep = T) %>% ungroup %>%  #pull(data) %>% .[[1]] -> data
+    mutate(ft_out = purrr::map(data, function(data) {
+      
+      # modified version of bill's code
+      data %>% 
+        mutate(year_ft = year(ymd_hms(date_of_landing)) * 10^6 + sequential_number,
+               ft_datelink = adfg_number * 10^8 + year(ymd_hms(date_of_landing)) * 10^4 + month(ymd_hms(date_of_landing)) * 100 + day(ymd_hms(date_of_landing)),
+               ft_landinglink = ft_datelink, # PROVISIONAL
+               ft_row_east1_west2 = ifelse(stat_area < 740000, 1, 2),
+               ftlanding_east1_west2_both3 = 0, # PROVISIONAL
+               
+               last_name = str_split(cfec_permit_holder_name, " ", simplify = TRUE)[,1],
+               first_name = str_split(cfec_permit_holder_name, " ", simplify = TRUE)[,2],
+               middle_initial = str_split(cfec_permit_holder_name, " ", simplify = TRUE)[,3],
+               unique_captain_numeric = NA,
+               captain_unique = NA) %>% 
+        # replace NA with zero 
+        replace_na(list(amount = 0, effort_sum = 0, landed_pounds = 0, 
+                        number_of_crab = 0, whole_pounds = 0)) %>%
+        # update ft_landinglink, ftlanding_east1_west2_both3
+        group_by(trip_number) %>%
+        mutate(ft_landinglink = max(ft_datelink, na.rm = TRUE),
+               ftlanding_east1_west2_both3 = ifelse(length(unique(na.omit(ft_row_east1_west2))) > 1, 3,
+                                                    unique(na.omit(ft_row_east1_west2)))) %>%
+        ungroup -> ft_out
+      
+      return(ft_out)
+    })) %>%
+    transmute(ft_out) %>% 
+    unnest(ft_out) -> ft_out
+  
+  # pot sum ----
+  
+  pot_sum %>%
+    f_sdr(., col = "fishery", type = "fishery_code") %>%
+    mutate(potsamplink = adfg * 10^8 + year(mdy(sampdate)) * 10^4 + month(mdy(sampdate)) * 100 + day(mdy(sampdate)),
+           adfg_date_spn = adfg * 10^10 + (year(mdy(sampdate)) - 2000) * 10^6 + month(mdy(sampdate)) * 10^4 + day(mdy(sampdate)) * 100 + as.numeric(spn),
+           ft_landinglink = potsamplink,
+           ft_numbercrablanded = 0,
+           ft_numberpotlifts = 0,
+           last_name = NA,
+           first_name = NA,
+           middle_initial = NA) %>%
+    # list by season and do procedure
+    nest_by(crab_year, .keep = T) %>% ungroup %>% #pull(data) %>% .[[1]] -> data
+    mutate(pot_sum_out = purrr::map(data, function(data) {
+      ft_out %>% 
+        group_by(season, ft_landinglink) %>%
+        summarise(catch = sum(number_of_crab, na.rm = T),
+                  effort = sum(effort_sum, na.rm = T),
+                  lname = last_name[1],
+                  fname = first_name[1],
+                  mi = middle_initial[1]) -> xtemp
+      for(i in 1:nrow(data)) {
+        min.big.link <- min(xtemp$ft_landinglink[xtemp$ft_landinglink >= data$potsamplink[i]])
+        j <- which(xtemp$ft_landinglink == min.big.link)
+        data$ft_landinglink[i] <- xtemp$ft_landinglink[j]
+        data$ft_numbercrablanded[i] <- xtemp$catch[j]
+        data$ft_numberpotlifts[i] <- xtemp$effort[j]
+        data$last_name[i] <- xtemp$lname[j]
+        data$first_name[i] <- xtemp$fname[j]
+        data$middle_initial[i] <- xtemp$mi[j]
+      }
+      
+      return(data)
+    })) %>%
+    transmute(pot_sum_out) %>% 
+    unnest(pot_sum_out) %>%
+    dplyr::select(-management_area, -target) -> pot_sum_out
+  
+  # obs meas ----
+  
+  obs_meas %>%
+    f_sdr(., col = "fishery", type = "fishery_code") %>%
+    mutate(adfg_date_spn = adfg * 10^10 + (year(mdy(sampdate)) - 2000) * 10^6 + month(mdy(sampdate)) * 10^4 + day(mdy(sampdate)) * 100 + as.numeric(spn),
+           potsamplink = adfg * 10^8 + year(mdy(sampdate)) * 10^4 + month(mdy(sampdate)) * 100 + day(mdy(sampdate)),
+           ft_landinglink = potsamplink,
+           ft_numbercrablanded = 0,
+           ft_numberpotlifts = 0,
+           samppotsforpotsamplink = 0,
+           last_name = NA,
+           first_name = NA,
+           middle_initial = NA) %>%
+    # list by season and do procedure
+    nest_by(crab_year, .keep = T) %>% ungroup %>%# pull(data) %>% .[[1]] -> data
+    mutate(obs_meas_out = purrr::map(data, function(data) {
+      
+      pot_sum_out %>%
+        # vessel x day observer pot counts
+        add_count(potsamplink) %>% 
+        group_by(adfg_date_spn) %>%
+        summarize(x1 = ft_landinglink[1], 
+                  x2 = ft_numbercrablanded[1], 
+                  x3 = ft_numberpotlifts[1],
+                  x4 = last_name[1], 
+                  x5 = first_name[1], 
+                  x6 = middle_initial[1], 
+                  x7 = n[1]) %>%
+        # sorts Xtemp appropriately 
+        left_join(data, .) -> xtemp
+      
+      data$ft_landinglink <- xtemp$x1
+      data$ft_numbercrablanded <- xtemp$x2
+      data$ft_numberpotlifts <- xtemp$x3
+      data$last_name <- xtemp$x4
+      data$first_name <- xtemp$x5
+      data$middle_initial <- xtemp$x6
+      data$samppotsforpotsamplink <- xtemp$x7
+      
+      return(data)
+      
+    })) %>%
+    transmute(obs_meas_out) %>% 
+    unnest(obs_meas_out) %>%
+    dplyr::select(-management_area, -target) -> obs_meas_out
+  
+  # output ----
+  
+  return(list(ft = ft_out,
+              pot_sum = pot_sum_out,
+              obs_meas = obs_meas_out))
+  
+  
+}
+
+# f_add_permit_holder ----
+# add permit holder to observer data from fish ticket and cfec information
+# args: ft_dump - fish ticket data dump from ocean ak
+#       obs - all year count pot or measure pot data dump
+
+f_add_permit_holder <- function(ft_dump, obs, permit_path = "aigkc/data/permits") {
+  
+  # permit data ----
+  
+  purrr::map(list.files(permit_path, full.names = T), function(x){
+    read_csv(x) %>% 
+      janitor::clean_names() %>%
+      # get needed info and create permit number on fish ticket dump
+      transmute(year, fishery, adfg = as.numeric(vessel_adfg), last_name, first_name, middle_initial, permit_number,
+                cfec_permit = paste0(fishery, permit_number)) %>%
+      filter(grepl("K91", fishery)) %>%
+      distinct
+  }) %>%
+    do.call("bind_rows",. ) -> permits
+  
+  # prep fish ticket data ----
+  
+  ft_dump %>%
+    transmute(season = case_when(!is.na(season) ~ season,
+                                 (is.na(season) & dol_year < 2000 & month_landed < 9) ~ paste0(dol_year-1, "/", substring(dol_year, 3, 4)),
+                                 (is.na(season) & dol_year < 2000 & month_landed >= 9) ~ paste0(dol_year, "/", substring(dol_year+1, 3, 4)),
+                                 (is.na(season) & dol_year >= 2000 & month_landed < 7) ~ paste0(dol_year-1, "/", substring(dol_year, 3, 4)),
+                                 (is.na(season) & dol_year >= 2000 & month_landed >= 7) ~ paste0(dol_year, "/", substring(dol_year+1, 3, 4))),
+              start = as_date(date_fishing_began),
+              end = as_date(date_of_landing),
+              year = year(end),
+              adfg_number,
+              cfec_permit_holder_name,
+              cfec_permit) %>% 
+    # join to permit holder information to fill in gaps by year and permit number (should be 51 that do not match)
+    left_join(permits, by = c("year", "cfec_permit")) %>% 
+    # select columns
+    transmute(season, 
+              start, end, adfg_number, 
+              last = last_name,
+              first = first_name,
+              mi = middle_initial) %>%
+    distinct %>%
+    filter(!grepl("ADFG", last)) %>% 
+    nest_by(season, adfg_number, .keep = T) %>% ungroup %>% 
+    # make trip dates continuous from begining to end of season
+    mutate(out = purrr::map(data, function(data) {
+      data = arrange(data, end)
+      if(nrow(data) > 1) {
+        for(i in 2:nrow(data)){
+          data$start[1] <- ymd(paste0(substring(data$season[1], 1, 4), "/7/1"))
+          if(as.numeric(substring(data$season[1], 1, 4)) < 2000) {data$end[nrow(data)] <- ymd(paste0(as.numeric(substring(data$season[1], 1, 4))+1, "/8/31"))}
+          if(as.numeric(substring(data$season[1], 1, 4)) >= 2000) {data$end[nrow(data)] <- ymd(paste0(as.numeric(substring(data$season[1], 1, 4))+1, "/6/30"))}
+          data$start[i] <- data$end[i-1] + 1
+        }
+      }
+      
+      return(data)
+    })) %>%
+    transmute(out) %>% unnest(out) %>% 
+    transmute(crab_year = as.numeric(substring(season, 1, 4)),
+              trip = interval(start, end),
+              adfg_number, 
+              permit_holder = paste(last, first, mi, sep = "_")) -> ft_trips
+  
+  # match to observer data ----
+  obs %>%
+    # get crab year
+    f_sdr(., col = "fishery", type = "fishery_code") %>%
+    dplyr::select(-management_area, -target) %>%
+    # align sample date with fish ticket permit holder
+    mutate(sampdate = mdy(sampdate),
+           permit_holder = purrr::pmap_chr(list(sampdate, crab_year, adfg), function(sampdate, yr, adfg) {
+             
+             ph_tmp <- ft_trips$permit_holder[ft_trips$crab_year == yr & ft_trips$adfg_number == adfg & sampdate %within% ft_trips$trip]
+             if(length(unique(ph_tmp)) == 0) {return(NA)}
+             else{return(unique(ph_tmp))}
+             
+           })) -> out
+  
+  return(out)
+  
+  
+}
+
+# f_crab_year ----
+
+# args: x - observer or dockside data frame with "fishery" code column
+#       date_correct - do crab_year correction, default = F
+#       date_format - format of date field, 
+
+f_crab_year <- function(x, date_correct = T, date_format = "mdy") {
+  
+  x %>%
+    mutate(crab_year = ifelse(as.numeric(substring(fishery, 3, 4)) < 60, 
+                              as.numeric(substring(fishery, 3, 4)) + 2000, 
+                              as.numeric(substring(fishery, 3, 4)) + 1900)) -> out
+  
+  if(date_correct == T & class(out$sampdate) == "Date") {
+    out %>% 
+      # adjust crab year
+      mutate(crab_year = case_when(sampdate > mdy(paste0("6/30/", crab_year + 1)) ~ crab_year + 1,
+                                   sampdate <= mdy(paste0("6/30/", crab_year + 1)) ~ crab_year,
+                                   is.na(sampdate) ~ crab_year)) -> out
+  }
+  if(date_correct == T & class(out$sampdate) != "Date") {
+    out %>% 
+      # coerce sample date to date format
+      mutate(sampdate = as_date(parse_date_time(sampdate, orders = date_format))) %>%
+      # adjust crab year
+      mutate(crab_year = case_when(sampdate > mdy(paste0("6/30/", crab_year + 1)) ~ crab_year + 1,
+                                   sampdate <= mdy(paste0("6/30/", crab_year + 1)) ~ crab_year,
+                                   is.na(sampdate) ~ crab_year)) -> out
+  }
+  
+  return(out)
+  
+}
+
+# f_subdistrict ----
+
+f_subdistrict <- function(x, which = "potsum") {
+  
+  if(which == "potsum") {
+    x %>%
+      # turn -9 to NA for location info
+      mutate_at(c("statarea", "latitude", "longitude", "e_w"),
+                function(x) {
+                  ifelse(x == -9 | x == "-", NA, x)
+                }) %>%
+      mutate(subdistrict = case_when((!is.na(statarea) & statarea > 744000) ~ "WAG",
+                                     (!is.na(statarea) & statarea < 744000) ~ "EAG",
+                                     (is.na(statarea) & is.na(longitude) & e_w == "E") ~ "WAG",
+                                     (is.na(statarea) & !is.na(longitude) & e_w == "W" & longitude <  -174) ~ "WAG", 
+                                     (is.na(statarea) & !is.na(longitude) & e_w == "W" & longitude >  -174) ~ "EAG",
+                                     (is.na(statarea) & !is.na(longitude) & is.na(e_w) & longitude > -174) ~ "EAG"),
+             subdistrict = case_when(is.na(subdistrict) & fishery %in% c("RB90", "RB92", "RB95") ~ "WAG",
+                                     is.na(subdistrict) & fishery %in% c("OB91", "OB90") ~ "EAG",
+                                     !is.na(subdistrict) ~ subdistrict)) -> out
+  }
+  
+  return (out)
+  
+  
+}
+
+
+
+# f_lon_simplify ----
+
+# args: x - observer or dockside data frame with longtidue and eastwest code column
+
+f_lon_simplify <- function(x) {
+  x %>%
+    mutate(longitude = ifelse(longitude > 0, longitude * -1, longitude),
+           longitude = ifelse(longitude == -9, NA, longitude),
+           longitude = ifelse(eastwest == "E", (-180 - longitude) + -180, longitude))
+}
+

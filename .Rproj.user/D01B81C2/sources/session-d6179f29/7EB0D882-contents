@@ -1,0 +1,20 @@
+#' Load BSAI dockside data
+#'
+#' Load BSAI dockside data and do data management routine
+#' @param path NULL. Path to data file if not pulling directly from database.
+#' @param stock NULL. Character sring stock abbreviation: BSSC, WBT, EBT, BBRKC, EAG, WAG, PIGKC, SMBKC, PIBKC, PIRKC, WAIRKC.
+#' @param database_pull Default = FALSE. Do updated pull from database.
+#' @param account NULL. Path to text file with username and password for database access.
+#' @return Dock data time series by fishery.
+#' @examples 
+#' 
+#' @export
+#' 
+load_dockside <- function(path, stock, database_pull, account) {
+  
+  if(database_pull == F){
+    dock <- read_csv(path)
+  }
+  
+  
+}
