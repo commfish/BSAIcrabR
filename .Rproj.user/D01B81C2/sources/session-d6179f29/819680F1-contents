@@ -5,12 +5,12 @@ devtools::install_github("commfish/BSAIcrabR")
 roxygen2::roxygenise(clean = TRUE)
 library(BSAIcrabR)
 
-add_crab_year(tibble(fishery  = "QO18", sampdate = "7/2/19"), date_correct = T)
+add_crab_year(tibble::tibble(fishery  = "QO18", sampdate = "7/2/19"), date_correct = T)
 
 library(devtools)
 
 # Add a dependency
-use_package('readr')
+use_package('tidyr', 'Depends')
 
 # (Re-)build NAMESPACE
 document()
