@@ -9,14 +9,17 @@
 #'
 #' @export
 #'
-dockside_comp <- function(data, by, lump = T) {
+get_observer_comp <- function(data, by, lump = T) {
+
+  # make sure fishery and crab_year are not in by
+  by = by[!(by %in% c("fishery", "crab_year"))]
 
   if("shell" %in% by & lump == T){
     data %>%
       filter(!is.na(shell),
              shell != -9) %>%
-      mutate(shell = case_when(shell %in% c(0:2, 9) ~ 2,
-                               shell %in% c(3:5) ~ 3)) -> data
+      mutate(shell = case_when(shell %in% c(0:2, 9) ~ "new",
+                               shell %in% c(3:5) ~ "old")) -> data
   }
   if("shell" %in% by & lump == F){
     data %>%
@@ -28,24 +31,17 @@ dockside_comp <- function(data, by, lump = T) {
       filter(!is.na(legal),
              legal != -9)  -> data
   }
-  if("adfg" %in% by){
+  if("sex" %in% by){
     data %>%
-      filter(!is.na(adfg),
-             adfg != -9)  -> data
+      filter(!is.na(sex),
+             sex != -9)  -> data
   }
-  if("spcode" %in% by){
-    data %>%
-      filter(!is.na(spcode),
-             spcode != -9)  -> data
-  }
-  if("sample_date" %in% by){
-    data %>%
-      filter(!is.na(sample_date),
-             sample_date != -9)  -> data
-  }
+
 
   data[, c("crab_year", "fishery", "size", by, "numcrab")] %>%
     group_by_at(1:(ncol(.)-1)) %>%
-    summarise(total = sum(numcrab)) %>% ungroup
+    summarise(total = sum(numcrab)) %>% ungroup -> out
+
+  return(out)
 
 }
