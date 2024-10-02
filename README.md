@@ -18,7 +18,6 @@ library(BSAIcrabR)
 
 # data 
 ## count pot data
-```
 pot_sum <- load_pot_dump("./bbrkc/data/RKC-1990-2023_potsum.csv", stock = "BBRKC", clean = T)
 
 ## measure pot data
@@ -70,5 +69,4 @@ obs_comp %>% filter(substring(fishery, 1, 2) == "TR") %>%
 ## e166 tanner crab
 obs_comp %>% filter(substring(fishery, 1, 2) == "TT") %>%
   write_csv("./bbrkc/output/2024/tanner_bycatch_composition.csv")
-
 ```
