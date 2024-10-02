@@ -19,13 +19,16 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
   }
 
   pot %>%
+    # fix biotwine status data
+    mutate(biotwine_ok = case_when(biotwine_ok == "-" ~ NA,
+                                   biotwine_ok %in% c("n", "N") ~ "N",
+                                   biotwine_ok %in% c("y", "Y") ~ "Y")) %>%
     rename(sample_date = sampdate) %>%
     # add crab year
     add_crab_year() %>%
     # reorder
     transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, latitude, longitude,
-              eastwest, depth, soaktime, ring, mesh, biotwine_ok, spcode, sex, size, legal, shell, clutch, eggdev,
-              clutchcon, parasite) -> out
+              eastwest = ifelse("eastwest" %in% names(.), eastwest, NA), depth, soaktime, gearcode, ring, mesh, biotwine_ok, female, sublegal, tot_legal, msr_pot) -> out
   if(clean == T){
     # stock specific
     if(stock == "BBRKC"){
@@ -37,15 +40,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
         # filter EI and QT fisheries in early 90s by stat areas e166
         filter(!(fishery %in% early_90s_tt & (statarea > 660000 | statarea < 0))) %>%
         # combine all tanner e166 fishery codes
-        mutate(fishery = ifelse(fishery %in% early_90s_tt, gsub("EI|QT", "TT", fishery), fishery)) %>%
-        # fill in legal
-        add_legal(., stock = stock) %>%
-        # add empty field for maturity
-        mutate(maturity = NA) %>%
-        # add regulatory group
-        mutate(group = case_when(sex == 2 ~ "female",
-                                 sex == 1 & legal == 0 ~ "sublegal_male",
-                                 sex == 1 & legal == 1 ~ "legal_male")) -> out
+        mutate(fishery = ifelse(fishery %in% early_90s_tt, gsub("EI|QT", "TT", fishery), fishery)) -> out
     }
     if(stock %in% c("BSSC", "BSTC", "WBT", "EBT", "AIGKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
       stop(paste0("No method for ", stock, " yet !!"))

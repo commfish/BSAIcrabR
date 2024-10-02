@@ -24,7 +24,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     add_crab_year() %>%
     # reorder
     transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, latitude, longitude,
-              eastwest, depth, soaktime, ring, mesh, biotwine_ok, spcode, sex, size, legal, shell, clutch, eggdev,
+              eastwest, depth, soaktime, gearcode = ifelse("gearcode" %in% names(.), gearcode, NA), ring, mesh, biotwine_ok, spcode, sex, size, legal, shell, clutch, eggdev,
               clutchcon, parasite) -> out
   if(clean == T){
     # stock specific
