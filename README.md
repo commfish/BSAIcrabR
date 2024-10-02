@@ -1,4 +1,4 @@
-# BSAIcrabR: A simple R workflow for accessing and summarizing BSAI ADF\&G crab observer and dockside sampling data
+# BSAIcrabR: A simple R tools for accessing and summarizing ADF\&G BSAI crab observer and dockside sampling data
 
 ## Download Instructions
 To download, run the following:
