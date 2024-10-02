@@ -3,7 +3,7 @@
 #' Compute size composition from observer measure pot data
 #' @param data NULL. Dockside sample data in the format as the output of `load_crab_dump()`
 #' @param by NULL. Vector of column names other than crab year, fishery, and size to use as a grouping variable.
-#' @param lump T/F lump shell condition into new and old (TRUE) or not (FALSE). Default = TRUE.
+#' @param lump T/F. Lump shell condition into new and old (TRUE) or not (FALSE). Default = TRUE.
 #' @return Size frequency by year, fishery, and size
 #' @examples dockside_comp(data, by = "shell", lump = T)
 #'

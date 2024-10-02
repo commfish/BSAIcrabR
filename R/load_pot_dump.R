@@ -1,24 +1,24 @@
-#' Load BSAI Observer Measure Pot Data
+#' Load BSAI Observer Count Pot Data
 #'
-#' Load BSAI observer measure pot data and do data management routine
+#' Load BSAI observer count pot data and do data management routine
 #' @param path NULL. Path to data file if not pulling directly from database.
 #' @param stock NULL. Character string stock abbreviation: BSSC, WBT, EBT, BBRKC, EAG, WAG, PIGKC, SMBKC, PIBKC, PIRKC, WAIRKC.
 #' @param database_pull Default = FALSE. Do updated pull from database.
 #' @param clean Default = TRUE. Do stock specific data cleaning.
 #' @return Measure pot data time series by fishery.
-#' @examples load_crab_dump("./data.csv", stock = "BBRKC")
+#' @examples load_pot_dump("./data.csv", stock = "BBRKC")
 #'
 #' @export
 #'
-load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
+load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
 
   # load data
   if(database_pull == T){stop("Database pull not set up yet")}
   if(database_pull == F){
-    obs <- read_csv(path)
+    pot <- read_csv(path)
   }
 
-  obs %>%
+  pot %>%
     rename(sample_date = sampdate) %>%
     # add crab year
     add_crab_year() %>%
