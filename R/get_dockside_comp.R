@@ -9,7 +9,7 @@
 #'
 #' @export
 #'
-get_dockside_comp <- function(data, by, lump = T) {
+get_dockside_comp <- function(data, by = NULL, lump = T) {
 
   # make sure fishery and crab_year are not in by
   by = by[!(by %in% c("fishery", "crab_year"))]

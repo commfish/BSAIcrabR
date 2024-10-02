@@ -4,7 +4,7 @@
 \alias{get_total_catch}
 \title{Get Total Catch}
 \usage{
-get_total_catch(pot_data, crab_data, ft_data, stock, by, units = "t")
+get_total_catch(pot_data, crab_data, ft_data, stock, by = NULL, units = "t")
 }
 \arguments{
 \item{pot_data}{NULL. Observer count pot data in the same format as the output of \code{load_pot_dump()}}

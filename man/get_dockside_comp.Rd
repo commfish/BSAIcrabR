@@ -4,7 +4,7 @@
 \alias{get_dockside_comp}
 \title{Get retained size composition}
 \usage{
-get_dockside_comp(data, by, lump = T)
+get_dockside_comp(data, by = NULL, lump = T)
 }
 \arguments{
 \item{data}{NULL. Dockside sample data in the format as the output of \code{load_dockside()}}
