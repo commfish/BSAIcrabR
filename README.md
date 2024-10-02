@@ -12,17 +12,11 @@ Data access features under construction. Eventually, data access will be through
 Below is an example workflow for summarizing fishery data necessary for the BBRKC stock assessment:
 
 ```{r}
-# notes ----
-
-## Example BBRKC workflow using BSAIcrabR
-## tyler jackson
-## 10/2/2024
-
-# load ----
+# load 
 
 library(BSAIcrabR)
 
-# data ----
+# data 
 
 ## count pot data
 pot_sum <- load_pot_dump("./bbrkc/data/RKC-1990-2023_potsum.csv", stock = "BBRKC", clean = T)
@@ -50,22 +44,22 @@ readRDS("./misc/data/fish_ticket_stat_area_summary.RDS") %>%
          live_lb = live_lbs,
          deadloss_lb = deadloss_lbs) -> ft
 
-# retained catch ----
+# retained catch 
 
 get_retained_catch(ft_data = ft) %>%
   write_csv("./bbrkc/output/2024/retained_catch.csv")
 
-# total catch ----
+# total catch
 
 get_total_catch(pot_data = pot_sum, crab_data = obs_meas, ft_data = dir_effort, stock = "BBRKC") %>%
   write_csv("./bbrkc/output/2024/total_catch.csv")
 
-# retained size comp ----
+# retained size comp 
 
 get_dockside_comp(data = dock, by = NULL) %>%
   write_csv("./bbrkc/output/2024/retained_catch_composition.csv")
 
-# observer size comp ----
+# observer size comp 
 
 get_observer_comp(data = obs_meas, by = "sex") -> obs_comp
 
