@@ -9,7 +9,7 @@
 #'
 #' @export
 #'
-get_retained_catch <- function(ft_data, by, units = "t") {
+get_retained_catch <- function(ft_data, by = NULL, units = "t") {
 
   # make sure fishery and crab_year are not in by ----
   by = by[!(by %in% c("fishery", "crab_year"))]

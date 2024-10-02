@@ -12,7 +12,7 @@
 #'
 #' @export
 #'
-get_total_catch <- function(pot_data, crab_data, ft_data, stock, by, units = "t") {
+get_total_catch <- function(pot_data, crab_data, ft_data, stock, by = NULL, units = "t") {
 
   if(!(units %in% c("t", "lb"))){stop("Do not recognize the units, use t or lb")}
 
