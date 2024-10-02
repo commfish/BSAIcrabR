@@ -8,7 +8,7 @@ devtools::install_github("commfish/BSAIcrabR")
 ## Data Access
 Data access features under construction. Eventually, data access will be through the load_* series of functions. Use of these functions to download data will require connected to an ADF\&G network and an OceanAK account (fish ticket data).
 
-## Usage
+## Example
 Below is an example workflow for summarizing fishery data necessary for the BBRKC stock assessment:
 
 ```{r}
