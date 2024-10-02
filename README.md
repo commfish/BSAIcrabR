@@ -11,14 +11,18 @@ Data access features under construction. Eventually, data access will be through
 ## Example
 Below is an example workflow for summarizing fishery data necessary for the BBRKC stock assessment:
 
-```{r}
-# load 
-
+```
+# load
+```
+```
 library(BSAIcrabR)
-
+```
+```
 # data 
-
+```
+```
 ## count pot data
+```
 pot_sum <- load_pot_dump("./bbrkc/data/RKC-1990-2023_potsum.csv", stock = "BBRKC", clean = T)
 
 ## measure pot data
