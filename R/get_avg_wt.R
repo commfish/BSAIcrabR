@@ -50,7 +50,7 @@ get_avg_wt <- function(data, stock, by, lump = T, units = "t") {
 
   data[, c("crab_year", "fishery", by, "calc_wt")] %>%
     group_by_at(1:(ncol(.) - 1)) %>%
-    summarise(avg_wt = mean(calc_wt)) %>% ungroup -> out
+    summarise(avg_wt = mean(calc_wt, na.rm = T)) %>% ungroup -> out
 
   return(out)
 

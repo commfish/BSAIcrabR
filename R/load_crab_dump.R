@@ -25,7 +25,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     # reorder
     transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, latitude, longitude,
               eastwest, depth, soaktime, gearcode = ifelse("gearcode" %in% names(.), gearcode, NA), ring, mesh, biotwine_ok, spcode, sex, size, legal, shell, clutch, eggdev,
-              clutchcon, parasite) -> out
+              clutchcon, maturity = ifelse("maturity" %in% names(.), maturity, NA), parasite) -> out
   if(clean == T){
     # stock specific
     if(stock == "BBRKC"){
@@ -40,8 +40,6 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
         mutate(fishery = ifelse(fishery %in% early_90s_tt, gsub("EI|QT", "TT", fishery), fishery)) %>%
         # fill in legal
         add_legal(., stock = stock) %>%
-        # add empty field for maturity
-        mutate(maturity = NA) %>%
         # add regulatory group
         mutate(group = case_when(sex == 2 ~ "female",
                                  sex == 1 & legal == 0 ~ "sublegal_male",
@@ -63,7 +61,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
                fishery = ifelse((fishery %in% early_90s_tt) & (statarea > 660000 | statarea < 0), paste0("QT", substring(fishery, 3, 4)), fishery),
                fishery = ifelse((fishery %in% early_90s_tt) & (statarea <= 660000 | statarea >= 0), paste0("TT", substring(fishery, 3, 4)), fishery)) %>%
         # fill in legal
-        add_legal(., stock = stock) %>%
+        add_legal(., stock = stock) %>% count(maturity)
         # add empty field for maturity
         mutate(maturity = NA) %>%
         # add regulatory group
