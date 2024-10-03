@@ -61,9 +61,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
                fishery = ifelse((fishery %in% early_90s_tt) & (statarea > 660000 | statarea < 0), paste0("QT", substring(fishery, 3, 4)), fishery),
                fishery = ifelse((fishery %in% early_90s_tt) & (statarea <= 660000 | statarea >= 0), paste0("TT", substring(fishery, 3, 4)), fishery)) %>%
         # fill in legal
-        add_legal(., stock = stock) %>% count(maturity)
-        # add empty field for maturity
-        mutate(maturity = NA) %>%
+        add_legal(., stock = stock) %>%
         # add regulatory group
         mutate(group = case_when(sex == 2 ~ "female",
                                  sex == 1 & legal == 0 ~ "sublegal_male",
