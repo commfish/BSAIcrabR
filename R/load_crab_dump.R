@@ -20,10 +20,8 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
 
   obs %>%
     rename(sample_date = sampdate) %>%
-    # add crab year
-    add_crab_year() %>%
     # reorder
-    transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, latitude, longitude,
+    transmute(fishery, trip, adfg, sample_date, spn, statarea, latitude, longitude,
               eastwest, depth, soaktime, gearcode = ifelse("gearcode" %in% names(.), gearcode, NA), ring, mesh, biotwine_ok, spcode, sex, size, legal, shell, clutch, eggdev,
               clutchcon, maturity = ifelse("maturity" %in% names(.), maturity, NA), parasite) -> out
   if(clean == T){
@@ -52,6 +50,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
       out %>%
         # fix transition to rationalization yr
         mutate(fishery = gsub("QO05r", "QO05", fishery),
+               fishery = gsub("QO05o", "QO04", fishery),
                # bbrkc test fish and cdq fisheries to TR
                fishery = gsub("CO|EO", "QO", fishery),
                # cdq rkc and bkc fisheries to PIBKC
@@ -72,6 +71,9 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     if(stock %in% c("BSTC", "WBT", "EBT", "AIGKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
       stop(paste0("No method for ", stock, " yet !!"))
     }
+
+    # add crab year
+    out <- add_crab_year(out, date_correct = T)
 
   }
 
