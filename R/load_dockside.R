@@ -31,7 +31,23 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
         mutate(fishery = gsub("XR|CR", "TR", fishery)) %>%
         filter(substring(fishery, 1, 2) == "TR") -> out
     }
-    if(stock %in% c("BSSC", "BSTC", "WBT", "EBT", "AIGKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
+    if(stock == "BSSC"){
+      early_90s_tt <- c("EI91", "EI92", paste0("QT", 93:96))
+      out %>%
+        # fix transition to rationalization yr
+        # cdq and eo fisheries to QO
+        # bbrkc test fish and cdq fisheries to TR
+        # early tanner crab fisheries to QT or TT based on e166 line
+        # fisheries without any dates in dockside data (make hard change)
+        mutate(fishery = gsub("QO05r", "QO05", fishery),
+               fishery = gsub("CO|EO", "QO", fishery),
+               fishery = gsub("XR|CR", "TR", fishery),
+               fishery = ifelse(fishery %in% early_90s_tt, paste0("QT", substring(fishery, 3, 4)), fishery),
+               fishery = ifelse(fishery %in% c("EO91", "EO92"), paste0(substring(fishery, 1, 2), as.numeric(substring(fishery, 3, 4))-1), fishery)) -> out
+    }
+
+
+    if(stock %in% c("BSTC", "WBT", "EBT", "AIGKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
       stop(paste0("No method for ", stock, " yet !!"))
     }
   }

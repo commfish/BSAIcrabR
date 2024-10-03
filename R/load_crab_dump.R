@@ -47,7 +47,25 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
                                  sex == 1 & legal == 0 ~ "sublegal_male",
                                  sex == 1 & legal == 1 ~ "legal_male")) -> out
     }
-    if(stock %in% c("BSSC", "BSTC", "WBT", "EBT", "AIGKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
+    if(stock == "BSSC") {
+      ## fishery codes for early 90s tanner e166 fisheries
+      early_90s_tt <- c("EI91", "EI92", paste0("QT", 93:96))
+      ## data mgmt specific to bssc
+      out %>%
+        # fix transition to rationalization yr
+        mutate(fishery = gsub("QO05r", "QO05", fishery),
+               # bbrkc test fish and cdq fisheries to TR
+               fishery = gsub("CO|EO", "QO", fishery),
+               # cdq rkc and bkc fisheries to PIBKC
+               fishery = gsub("CK", "QP", fishery),
+               # bbrkc test fish and cdq fisheries to TR
+               fishery = gsub("XR|CR", "TR", fishery),
+               fishery = ifelse((fishery %in% early_90s_tt) & (statarea > 660000 | statarea < 0), paste0("QT", substring(fishery, 3, 4)), fishery),
+               fishery = ifelse((fishery %in% early_90s_tt) & (statarea <= 660000 | statarea >= 0), paste0("TT", substring(fishery, 3, 4)), fishery)) -> out
+    }
+
+
+    if(stock %in% c("BSTC", "WBT", "EBT", "AIGKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
       stop(paste0("No method for ", stock, " yet !!"))
     }
 
