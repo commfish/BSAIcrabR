@@ -41,16 +41,16 @@ add_calc_wt <- function(x, stock, units = "t") {
     x %>%
       mutate(a = case_when(stock == "BSSC" & sex == 1 ~ 0.000267,
                            stock == "BSSC" & sex == 2 & (maturity == 1 | clutch > 0) ~ 0.001158,
-                           stock == "BSSC" & sex == 2 & (maturity == 0 | clutch <= 0) ~ 0.001047,
+                           stock == "BSSC" & sex == 2 & (maturity == 0 | clutch <= 0 | is.na(clutch)) ~ 0.001047,
                            stock %in% c("WBT", "EBT") & sex == 1 ~ 0.00027,
                            stock %in% c("WBT", "EBT") & sex == 2 & (maturity == 1 | clutch > 0) ~ 0.000441,
-                           stock %in% c("WBT", "EBT") & sex == 2 & (maturity == 0 | clutch <= 0) ~ 0.000562)) %>%
+                           stock %in% c("WBT", "EBT") & sex == 2 & (maturity == 0 | clutch <= 0 | is.na(clutch)) ~ 0.000562)) %>%
       mutate(b = case_when(stock == "BSSC" & sex == 1 ~ 3.097253,
                            stock == "BSSC" & sex == 2 & (maturity == 1 | clutch > 0) ~ 2.708793,
-                           stock == "BSSC" & sex == 2 & (maturity == 0 | clutch <= 0) ~ 2.708367,
+                           stock == "BSSC" & sex == 2 & (maturity == 0 | clutch <= 0 | is.na(clutch)) ~ 2.708367,
                            stock %in% c("WBT", "EBT") & sex == 1 ~ 3.022134,
                            stock %in% c("WBT", "EBT") & sex == 2 & (maturity == 1 | clutch > 0) ~ 2.898686,
-                           stock %in% c("WBT", "EBT") & sex == 2 & (maturity == 0 | clutch <= 0) ~ 2.816928)) -> x
+                           stock %in% c("WBT", "EBT") & sex == 2 & (maturity == 0 | clutch <= 0 | is.na(clutch)) ~ 2.816928)) -> x
   }
 
   ## add calculated weight
