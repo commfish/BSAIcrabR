@@ -40,6 +40,7 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
         # early tanner crab fisheries to QT or TT based on e166 line
         # fisheries without any dates in dockside data (make hard change)
         mutate(fishery = gsub("QO05r", "QO05", fishery),
+               fishery = gsub("QO05o", "QO04", fishery),
                fishery = gsub("CO|EO", "QO", fishery),
                fishery = gsub("XR|CR", "TR", fishery),
                fishery = ifelse(fishery %in% early_90s_tt, paste0("QT", substring(fishery, 3, 4)), fishery),
