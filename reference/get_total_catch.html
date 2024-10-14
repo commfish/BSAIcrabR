@@ -61,7 +61,7 @@
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
-<dd><p>NULL. Vector of column names other than crab year, fishery, and group to use as a grouping variable. Must by present in count pot data.</p></dd>
+<dd><p>NULL. Vector of column names other than crab year, fishery, and group to use as a grouping variable.</p></dd>
 
 
 <dt id="arg-units">units<a class="anchor" aria-label="anchor" href="#arg-units"></a></dt>
@@ -70,7 +70,7 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Data frame including crab year, fishery, grouping variables, and average weight.</p>
+    <p>Data frame including crab year, fishery, grouping variables, and average weight. Average weights used for expansion to weight are only based on crab year, fishery, and sex. No other 'by' variables are included here, so that the sum of total catch by variables (i.e., sex and shell condition) will equal the total catch by sex.</p>
     </div>
 
     <div class="section level2">
