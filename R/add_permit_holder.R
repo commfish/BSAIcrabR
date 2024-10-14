@@ -9,7 +9,7 @@
 #'
 #' @export
 #'
-add_permit_holder <- function(ft_dump, obs, permit_path = "aigkc/data/permits") {
+add_permit_holder <- function(ft_dump, pot_data, permit_path = "aigkc/data/permits") {
 
   # permit data ----
 
