@@ -15,12 +15,12 @@ get_total_catch(pot_data, crab_data, ft_data, stock, by = NULL, units = "t")
 
 \item{stock}{NULL. Character string stock abbreviation: BSSC, WBT, EBT, BBRKC, EAG, WAG, PIGKC, SMBKC, PIBKC, PIRKC, WAIRKC.}
 
-\item{by}{NULL. Vector of column names other than crab year, fishery, and group to use as a grouping variable. Must by present in count pot data.}
+\item{by}{NULL. Vector of column names other than crab year, fishery, and group to use as a grouping variable.}
 
 \item{units}{NULL. Unit of measurement, "t" or "lb". Default = "t".}
 }
 \value{
-Data frame including crab year, fishery, grouping variables, and average weight.
+Data frame including crab year, fishery, grouping variables, and average weight. Average weights used for expansion to weight are only based on crab year, fishery, and sex. No other 'by' variables are included here, so that the sum of total catch by variables (i.e., sex and shell condition) will equal the total catch by sex.
 }
 \description{
 Estimate total catch from observer CPUE data

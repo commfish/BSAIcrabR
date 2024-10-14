@@ -21,18 +21,21 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
   dock %>%
     # add crab year
     add_crab_year() %>%
+    {if(!("subdistrict" %in% names(.))){mutate(subdistrict = NA) %>% .} else{.}} %>%
     # reorder
-    transmute(crab_year, fishery, adfg, sample_date, spcode, size, legal, shell, numcrab) -> out
+    transmute(crab_year, fishery, adfg, sample_date, subdistrict, spcode, size, legal, shell, numcrab) -> out
 
   if(clean == T){
     # stock specific
     if(stock == "BBRKC"){
       out %>%
-        mutate(fishery = gsub("XR|CR", "TR", fishery)) %>%
-        filter(substring(fishery, 1, 2) == "TR") -> out
+        mutate(fishery = gsub("XR|CR", "TR", fishery),
+               fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
+        filter(substring(fishery, 1, 2) == "TR") %>%
+        dyply::select(-subdistrict) -> out
     }
-    if(stock == "BSSC"){
-      early_90s_tt <- c("EI91", "EI92", paste0("QT", 93:96))
+    if(stock %in% c("BSSC", "BSTC", "EBT", "WBT")){
+      early_90s_tt <- c("EI89", "EI90", "EI91", "EI92", paste0("QT", 93:96))
       out %>%
         # fix transition to rationalization yr
         # cdq and eo fisheries to QO
@@ -44,11 +47,34 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
                fishery = gsub("CO|EO", "QO", fishery),
                fishery = gsub("XR|CR", "TR", fishery),
                fishery = ifelse(fishery %in% early_90s_tt, paste0("QT", substring(fishery, 3, 4)), fishery),
-               fishery = ifelse(fishery %in% c("EO91", "EO92"), paste0(substring(fishery, 1, 2), as.numeric(substring(fishery, 3, 4))-1), fishery)) -> out
+               fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
+        dyply::select(-subdistrict) -> out
+    }
+    if(stock %in% c("AIGKC", "EAG", "WAG")){
+      out %>%
+        # make XE fisheries EAG
+        mutate(subdistrict = ifelse(substring(fishery, 1, 2) == "XE", "EAG", subdistrict)) %>%
+        # fix subdistrict for OB08
+        mutate(subdistrict = case_when(crab_year != 2008 ~ subdistrict,
+                                       (crab_year == 2008 & adfg %in% c(35767, 37887)) ~ "WAG",
+                                       (crab_year == 2008 & adfg %in% c(103, 5992, 20556)) ~ "EAG",
+                                       (crab_year == 2008 & adfg == 5992 & sample_date > as_date("2008-12-1")) ~ "WAG")) -> out
+    }
+    if(stock == "EAG"){
+      out %>%
+        filter(subdistrict == "EAG") -> out
+    }
+    if(stock == "WAG"){
+      out %>%
+        filter(subdistrict == "WAG") -> out
+    }
+    if(stock %in% c("PIGKC")){
+      out %>%
+        dyply::select(-subdistrict) -> out
     }
 
 
-    if(stock %in% c("BSTC", "WBT", "EBT", "AIGKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
+    if(stock %in% c("SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
       stop(paste0("No method for ", stock, " yet !!"))
     }
   }
