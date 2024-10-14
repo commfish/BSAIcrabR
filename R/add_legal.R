@@ -23,16 +23,16 @@ add_legal <- function(x, stock = NULL, use_observer = T, use_current = T) {
   ## routine ----
   # add legal size to data
   if(use_current == T) {
-    legal_sizes <- tibble(BSAIstock = c("BSSC", "WBT", "EBT", "BBRKC", "EAG", "WAG", "PIGKC",
+    legal_sizes <- tibble(BSAIstock = c("BSSC", "WBT", "EBT", "BBRKC", "AIGKC", "EAG", "WAG", "PIGKC",
                                         "SMBKC", "PIBKC", "PIRKC", "WAIRKC"),
-                          legal_size = c(78, 111, 121, 124, 135, 135, 135, 124, 124, 124, 124))
+                          legal_size = c(78, 111, 121, 124, 135, 135, 135, 135, 124, 124, 124, 124))
     x %>% mutate(legal_size = filter(legal_sizes, BSAIstock == stock) %>% pull(legal_size)) -> x
   }
   if(use_current == F) {
 
-    tibble(BSAIstock = c("BSSC", "WBT", "EBT", "BBRKC", "EAG", "WAG", "PIGKC",
+    tibble(BSAIstock = c("BSSC", "WBT", "EBT", "BBRKC", "AIGKC", "EAG", "WAG", "PIGKC",
                          "SMBKC", "PIBKC", "PIRKC", "WAIRKC"),
-           legal_size = c(78, 111, 121, 124, 135, 135, 135, 124, 124, 124, 124)) %>%
+           legal_size = c(78, 111, 121, 124, 135, 135, 135, 135, 124, 124, 124, 124)) %>%
       expand_grid(crab_year = min(x$crab_year):max(x$crab_year)) %>%
       mutate(legal_size = ifelse(stock %in% c("WBT", "EBT") & crab_year <= 2010, 140, legal_size)) -> legal_sizes
 
