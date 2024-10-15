@@ -58,7 +58,8 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
         mutate(subdistrict = case_when(crab_year != 2008 ~ subdistrict,
                                        (crab_year == 2008 & adfg %in% c(35767, 37887)) ~ "WAG",
                                        (crab_year == 2008 & adfg %in% c(103, 5992, 20556)) ~ "EAG",
-                                       (crab_year == 2008 & adfg == 5992 & sample_date > as_date("2008-12-1")) ~ "WAG")) -> out
+                                       (crab_year == 2008 & adfg == 5992 & sample_date > as_date("2008-12-1")) ~ "WAG")) %>%
+        mutate(fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) -> out
     }
     if(stock == "EAG"){
       out %>%

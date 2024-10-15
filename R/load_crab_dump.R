@@ -76,6 +76,9 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     if(stock %in% c("AIGKC", "EAG", "WAG")) {
       ## data mgmt specific to gkc
       out %>%
+        # make XE fisheries EAG
+        mutate(subdistrict = ifelse(substring(fishery, 1, 2) == "XE", "EAG", subdistrict),
+               fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
         # fill in legal
         add_legal(., stock = stock) %>%
         # add regulatory group
