@@ -28,6 +28,15 @@ get_total_catch <- function(pot_data, crab_data, ft_data, stock, by = NULL, lump
   if(!is.null(by_cp)){
     if(!(by_cp %in% names(ft_data))){stop(paste0("One or more of ", by_cp, " not in fish ticket data !!"))}
   }
+  ## filter pots for AIGKC
+  if(stock %in% c("AIGKC", "EAG", "WAG")) {
+    crab_data %>%
+      filter(!(gearcode %in% c(1:3, 21:23, 80))) -> crab_data
+    pot_data %>%
+      filter(!(gearcode %in% c(1:3, 14:23, 80:81))) -> pot_data
+
+  }
+
   # clean up by data in crab data and save it as a separate object
   crab_data_tc <- crab_data
   if("shell" %in% by & lump == T){
@@ -51,6 +60,7 @@ get_total_catch <- function(pot_data, crab_data, ft_data, stock, by = NULL, lump
     crab_data_tc %>%
       filter(sex %in% 1:2)  -> crab_data_tc
   }
+
 
   # get average wt
   crab_data %>%
