@@ -25,15 +25,17 @@ add_calc_wt <- function(x, stock, units = "t") {
       mutate(a = case_when(stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 1 ~ 0.000403,
                            stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size >= 90 ~ 0.003593,
                            stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size < 90 ~ 0.000408,
-                           stock %in% c("EAG", "WAG", "AIGKC") & sex == 1 ~ 0.000271236,
-                           stock %in% c("EAG", "WAG", "AIGKC") & sex == 2 ~ 0.001424,
+                           stock %in% c("PIGKC") & sex == 1 ~ 0.000271236,
+                           stock %in% c("EAG", "WAG", "AIGKC") & sex == 1 ~ 0.0001445,
+                           stock %in% c("EAG", "WAG", "AIGKC", "PIGKC") & sex == 2 ~ 0.001424,
                            stock %in% c("SMBKC", "PIBKC") & sex == 1 ~ 0.000502,
                            stock %in% c("SMBKC", "PIBKC") & sex == 2 ~ 0.02065)) %>%
       mutate(b = case_when(stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 1 ~ 3.141334,
                            stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size >= 90 ~ 2.666076,
                            stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size < 90 ~ 3.127956,
-                           stock %in% c("EAG", "WAG", "AIGKC") & sex == 1 ~ 3.167577,
-                           stock %in% c("EAG", "WAG", "AIGKC") & sex == 2 ~ 2.781,
+                           stock %in% c("PIGKC") & sex == 1 ~ 3.167577,
+                           stock %in% c("EAG", "WAG", "AIGKC") & sex == 1 ~ 3.28113,
+                           stock %in% c("EAG", "WAG", "AIGKC", "PIGKC") & sex == 2 ~ 2.781,
                            stock %in% c("SMBKC", "PIBKC") & sex == 1 ~ 3.107158,
                            stock %in% c("SMBKC", "PIBKC") & sex == 2 ~ 2.27)) -> x
   }
