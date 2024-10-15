@@ -26,8 +26,9 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     {if(!("subdistrict" %in% names(.))){mutate(subdistrict = NA) %>% .} else{.}} %>%
     {if(!("eastwest" %in% names(.))){mutate(eastwest = NA) %>% .} else{.}} %>%
     rename(sample_date = sampdate) %>%
+    add_crab_year() %>%
     # reorder
-    transmute(fishery, trip, adfg, sample_date, spn, statarea, subdistrict, latitude, longitude, eastwest, depth, soaktime, gearcode, ring, mesh, biotwine_ok, female, sublegal, tot_legal, msr_pot) -> out
+    transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, subdistrict, latitude, longitude, eastwest, depth, soaktime, gearcode, ring, mesh, biotwine_ok, female, sublegal, tot_legal, msr_pot) -> out
   if(clean == T){
     # stock specific
     if(stock == "BBRKC"){
@@ -94,7 +95,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     }
 
     # add crab year
-    out <- add_crab_year(out, date_correct = T)
+    #out <- add_crab_year(out, date_correct = T)
 
   }
 

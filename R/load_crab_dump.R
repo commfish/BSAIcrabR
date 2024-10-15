@@ -20,12 +20,13 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
 
   obs %>%
     rename(sample_date = sampdate) %>%
+    add_crab_year() %>%
     {if(!("subdistrict" %in% names(.))){mutate(subdistrict = NA) %>% .} else{.}} %>%
     {if(!("eastwest" %in% names(.))){mutate(eastwest = NA) %>% .} else{.}} %>%
     {if(!("maturity" %in% names(.))){mutate(maturity = NA) %>% .} else{.}} %>%
     {if(!("gearcode" %in% names(.))){mutate(gearcode = NA) %>% .} else{.}} %>%
     # reorder
-    transmute(fishery, trip, adfg, sample_date, spn, statarea, subdistrict, latitude, longitude,
+    transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, subdistrict, latitude, longitude,
               eastwest, depth, soaktime, gearcode, ring, mesh, biotwine_ok, spcode, sex, size, legal, shell, clutch, eggdev,
               clutchcon, maturity, parasite) -> out
   if(clean == T){
@@ -109,7 +110,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     }
 
     # add crab year
-    out <- add_crab_year(out, date_correct = T)
+    #out <- add_crab_year(out, date_correct = T)
 
   }
 
