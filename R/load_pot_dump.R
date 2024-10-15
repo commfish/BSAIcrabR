@@ -66,7 +66,11 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
       ## data mgmt specific to gkc
       out %>%
         clean_lat_lon() %>%
-        mutate(subdistrict = ifelse(fishery == "OB08" & longitude < -174, "WAG", subdistrict)) %>%
+        mutate(subdistrict = ifelse(fishery == "OB08" & longitude < -174, "WAG", subdistrict),
+               subdistrict = ifelse(substring(fishery, 1, 2) == "XE", "EAG", subdistrict),
+               fishery = ifelse(fishery == "OB08" & longitude < -174, "RB08", fishery),
+               fishery = gsub("XE", "OB", fishery),
+               fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
         # remove pots without district info
         filter(subdistrict != "-") -> out
     }
