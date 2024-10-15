@@ -83,6 +83,8 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
                fishery = ifelse(fishery == "OB08" & longitude < -174, "RB08", fishery),
                fishery = gsub("XE", "OB", fishery),
                fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
+        mutate(fishery = ifelse(subdistrict == "EAG", gsub("RB", "OB", fishery),
+                                ifelse(subdistrict == "WAG", gsub("OB", "RB", fishery), fishery))) %>%
         # fill in legal
         add_legal(., stock = stock) %>%
         # add regulatory group
