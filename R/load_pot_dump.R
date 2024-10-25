@@ -55,7 +55,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
                # bbrkc test fish and cdq fisheries to TR
                fishery = gsub("CO|EO", "QO", fishery),
                # cdq rkc and bkc fisheries to PIBKC
-               fishery = gsub("CK", "QP", fishery),
+               fishery = gsub("CK|CP", "QP", fishery),
                # bbrkc test fish and cdq fisheries to TR
                fishery = gsub("XR|CR", "TR", fishery),
                fishery = ifelse((fishery %in% early_90s_tt) & (statarea > 660000 | statarea < 0), paste0("QT", substring(fishery, 3, 4)), fishery),
