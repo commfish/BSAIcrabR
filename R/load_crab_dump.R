@@ -21,10 +21,10 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
   obs %>%
     rename(sample_date = sampdate) %>%
     add_crab_year() %>%
-    {if(!("subdistrict" %in% names(.))){mutate(subdistrict = NA) %>% .} else{.}} %>%
-    {if(!("eastwest" %in% names(.))){mutate(eastwest = NA) %>% .} else{.}} %>%
-    {if(!("maturity" %in% names(.))){mutate(maturity = NA) %>% .} else{.}} %>%
-    {if(!("gearcode" %in% names(.))){mutate(gearcode = NA) %>% .} else{.}} %>%
+    mutate(subdistrict = ifelse(!("subdistrict" %in% names(.)), NA, subdistrict),
+           eastwest = ifelse(!("eastwest" %in% names(.)), NA, eastwest),
+           maturity = ifelse(!("maturity" %in% names(.)), NA, maturity),
+           gearcode = ifelse(!("gearcode" %in% names(.)), NA, gearcode)) %>%
     # reorder
     transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, subdistrict, latitude, longitude,
               eastwest, depth, soaktime, gearcode, ring, mesh, biotwine_ok, spcode, sex, size, legal, shell, clutch, eggdev,
@@ -72,7 +72,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
         mutate(group = case_when(sex == 2 ~ "female",
                                  sex == 1 & legal == 0 ~ "sublegal_male",
                                  sex == 1 & legal == 1 ~ "legal_male")) %>%
-        dyply::select(-subdistrict) -> out
+        dplyr::select(-subdistrict) -> out
     }
     if(stock %in% c("AIGKC", "EAG", "WAG")) {
       ## data mgmt specific to gkc
@@ -103,7 +103,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     if(stock == "PIGKC") {
       out %>%
         mutate(fishery = gsub("CO|EO", "QO", fishery)) %>%
-        dyply::select(-subdistrict) -> out
+        dplyr::select(-subdistrict) -> out
     }
 
 

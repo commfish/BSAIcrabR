@@ -21,7 +21,7 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
   dock %>%
     # add crab year
     add_crab_year() %>%
-    {if(!("subdistrict" %in% names(.))){mutate(subdistrict = NA) %>% .} else{.}} %>%
+    mutate(subdistrict = ifelse(!("subdistrict" %in% names(.)), NA, subdistrict)) %>%
     # reorder
     transmute(crab_year, fishery, adfg, sample_date, subdistrict, spcode, size, legal, shell, numcrab) -> out
 
@@ -32,7 +32,7 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
         mutate(fishery = gsub("XR|CR", "TR", fishery),
                fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
         filter(substring(fishery, 1, 2) == "TR") %>%
-        dyply::select(-subdistrict) -> out
+        dplyr::select(-subdistrict) -> out
     }
     if(stock %in% c("BSSC", "BSTC", "EBT", "WBT")){
       early_90s_tt <- c("EI89", "EI90", "EI91", "EI92", paste0("QT", 93:96))
@@ -48,7 +48,7 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
                fishery = gsub("XR|CR", "TR", fishery),
                fishery = ifelse(fishery %in% early_90s_tt, paste0("QT", substring(fishery, 3, 4)), fishery),
                fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
-        dyply::select(-subdistrict) -> out
+        dplyr::select(-subdistrict) -> out
     }
     if(stock %in% c("AIGKC", "EAG", "WAG")){
       out %>%
@@ -73,7 +73,7 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
     }
     if(stock %in% c("PIGKC")){
       out %>%
-        dyply::select(-subdistrict) -> out
+        dplyr::select(-subdistrict) -> out
     }
 
 
