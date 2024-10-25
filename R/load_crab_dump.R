@@ -48,7 +48,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
         mutate(group = case_when(sex == 2 ~ "female",
                                  sex == 1 & legal == 0 ~ "sublegal_male",
                                  sex == 1 & legal == 1 ~ "legal_male"))  %>%
-        dyply::select(-subdistrict) -> out
+        dplyr::select(-subdistrict) -> out
     }
     if(stock %in% c("BSSC", "BSTC", "WBT", "EBT")) {
       ## fishery codes for early 90s tanner e166 fisheries
