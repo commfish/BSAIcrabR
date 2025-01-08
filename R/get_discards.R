@@ -13,8 +13,8 @@
 get_discards <- function(retained_catch, total_catch, stock, handling_mortality = 0.3) {
 
   # directed fishery codes
-  tibble(stock_abbrev = c("BSSC", "WBT", "EBT", "BBRKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC"),
-         fish_code = c("QO", "QT", "TT", "TR", "OB", "RB", "QB", "QP", "QP", "QR", "RR")) %>%
+  tibble(stock_abbrev = c("BSSC", "WBT", "EBT", "BSTC", "BBRKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC"),
+         fish_code = c("QO", "QT", "TT", "QT|TT", "TR", "OB", "RB", "QB", "QP", "QP", "QR", "RR")) %>%
     filter(stock_abbrev == stock) %>%
     pull(fish_code) -> fish_code
 
@@ -33,7 +33,7 @@ get_discards <- function(retained_catch, total_catch, stock, handling_mortality 
 
   total_catch %>%
     # filter for the directd fishery
-    filter(substring(fishery, 1, 2) == fish_code) %>%
+    filter(grepl(fish_code, fishery)) %>%
     group_by(crab_year, fishery, sex) %>%
     summarise(total_catch_n = sum(total_catch_n, na.rm = T),
              total_catch_wt = sum(total_catch_wt, na.rm = T)) %>% ungroup %>%
