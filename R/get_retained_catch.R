@@ -4,7 +4,7 @@
 #' @param ft_data NULL. Fish ticket data with fields 'crab_year', 'fishery', 'effort' and whatever variables are specified in by.
 #' @param by NULL. Vector of column names other than crab year, fishery to use as a grouping variable. Must by present in ft_data.
 #' @param units NULL. Unit of measurement, "t" or "lb". Default = "t".
-#' @return Data frame including crab year, fishery, grouping variables, and average weight.
+#' @return Data frame including crab year, fishery, grouping variables, and retained catch.
 #' @examples get_retained_catch(ft_data, by = NULL)
 #'
 #' @export

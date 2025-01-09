@@ -8,7 +8,7 @@
 #' @param by NULL. Vector of column names other than crab year, fishery, and group to use as a grouping variable.
 #' @param lump T/F. Lump shell condition into new and old (TRUE) or not (FALSE). Default = TRUE.
 #' @param units NULL. Unit of measurement, "t" or "lb". Default = "t".
-#' @return Data frame including crab year, fishery, grouping variables, and average weight. Average weights used for expansion to weight are only based on crab year, fishery, and sex. No other 'by' variables are included here, so that the sum of total catch by variables (i.e., sex and shell condition) will equal the total catch by sex.
+#' @return Data frame including crab year, fishery, grouping variables, effort, average weight, and total catch. Average weights used for expansion to weight are only based on crab year, fishery, and sex. No other 'by' variables are included here, so that the sum of total catch by variables (i.e., sex and shell condition) will equal the total catch by sex.
 #' @examples get_avg_wt(pot_data, crab_data, ft_data, stock = "BBRKC")
 #'
 #' @export
