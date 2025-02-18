@@ -4,7 +4,7 @@
 \alias{get_observer_comp}
 \title{Get observer size composition}
 \usage{
-get_observer_comp(data, by, lump = T)
+get_observer_comp(data, by = NULL, lump = T)
 }
 \arguments{
 \item{data}{NULL. Dockside sample data in the format as the output of \code{load_crab_dump()}}

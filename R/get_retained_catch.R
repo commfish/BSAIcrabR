@@ -28,7 +28,8 @@ get_retained_catch <- function(ft_data, by = NULL, units = "t") {
     replace_na(list(live_n = 0, live_lb = 0, deadloss_n = 0, deadloss_lb = 0)) %>%
     group_by_at(c("crab_year", "fishery", by)) %>%
     summarise(retained_n = sum(live_n + deadloss_n),
-              retained_wt = sum(live_lb + deadloss_lb) * unit_convert) %>% ungroup -> out
+              retained_wt = sum(live_lb + deadloss_lb) * unit_convert) %>% ungroup %>%
+    filter(!is.na(fishery)) -> out
 
   return(out)
 

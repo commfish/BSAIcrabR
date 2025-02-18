@@ -14,7 +14,7 @@ get_retained_catch(ft_data, by = NULL, units = "t")
 \item{units}{NULL. Unit of measurement, "t" or "lb". Default = "t".}
 }
 \value{
-Data frame including crab year, fishery, grouping variables, and average weight.
+Data frame including crab year, fishery, grouping variables, and retained catch.
 }
 \description{
 Get retained catch from fish ticket data

@@ -4,7 +4,7 @@
 \alias{add_permit_holder}
 \title{Add Permit Holder to Observer  Pot Data}
 \usage{
-add_permit_holder(ft_dump, obs, permit_path = "aigkc/data/permits")
+add_permit_holder(ft_dump, pot_data, permit_path = "aigkc/data/permits")
 }
 \arguments{
 \item{ft_dump}{NULL. AIGKC fish ticket dump.}
