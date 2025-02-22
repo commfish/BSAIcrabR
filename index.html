@@ -44,8 +44,98 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9">
-BSAIcrabR: A simple R workflow for accessing and summarizing ADF&amp;G BSAI crab observer and dockside sampling data
+  <main id="main" class="col-md-9"><div class="section level1">
+<div class="page-header"><h1 id="bsaicrabr-a-simple-r-workflow-for-accessing-and-summarizing-adfg-bsai-crab-observer-and-dockside-sampling-data">BSAIcrabR: A simple R workflow for accessing and summarizing ADF&amp;G BSAI crab observer and dockside sampling data<a class="anchor" aria-label="anchor" href="#bsaicrabr-a-simple-r-workflow-for-accessing-and-summarizing-adfg-bsai-crab-observer-and-dockside-sampling-data"></a>
+</h1></div>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p><code>{r} devtools::install_github("commfish/BSAIcrabR")</code></p>
+</div>
+<div class="section level2">
+<h2 id="data-access">Data Access<a class="anchor" aria-label="anchor" href="#data-access"></a>
+</h2>
+<p>Data access features under construction. Eventually, data access will be through the load_* series of functions. Use of these functions to download data will require connected to an ADF&amp;G network and an OceanAK account (fish ticket data).</p>
+</div>
+<div class="section level2">
+<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
+</h2>
+<p>Below is an example workflow for summarizing fishery data necessary for the BBRKC stock assessment:</p>
+<p>```{r} # load</p>
+<p>library(BSAIcrabR)</p>
+</div>
+</div>
+<div class="section level1">
+<h1 id="data--">data —-<a class="anchor" aria-label="anchor" href="#data--"></a>
+</h1>
+<div class="section level2">
+<h2 id="count-pot-data">count pot data<a class="anchor" aria-label="anchor" href="#count-pot-data"></a>
+</h2>
+<p>pot_sum &lt;- load_pot_dump(“./bbrkc/data/RKC-1990-2023_potsum.csv”, stock = “BBRKC”, clean = T)</p>
+</div>
+<div class="section level2">
+<h2 id="measure-pot-data">measure pot data<a class="anchor" aria-label="anchor" href="#measure-pot-data"></a>
+</h2>
+<p>obs_meas &lt;- load_crab_dump(“./bbrkc/data/RKC-1990-2023_crab_dump.csv”, stock = “BBRKC”, clean = T)</p>
+</div>
+<div class="section level2">
+<h2 id="dockside-data">dockside data<a class="anchor" aria-label="anchor" href="#dockside-data"></a>
+</h2>
+<p>dock &lt;- load_dockside(“./bbrkc/data/RKC-1990-2023_retained_size_freq.csv”, stock = “BBRKC”, clean = T)</p>
+</div>
+<div class="section level2">
+<h2 id="timeseries-of-directed-effort">timeseries of directed effort<a class="anchor" aria-label="anchor" href="#timeseries-of-directed-effort"></a>
+</h2>
+<p>dir_effort_prerat &lt;- read_csv(“./misc/data/fish_ticket_timeseries/directed_effort_timeseries_DP.csv”)</p>
+</div>
+<div class="section level2">
+<h2 id="fish-ticket-summary-by-stat-area">fish ticket summary by stat area<a class="anchor" aria-label="anchor" href="#fish-ticket-summary-by-stat-area"></a>
+</h2>
+<p>readRDS(“../adfg_crab_observer/misc/data/fish_ticket_timeseries/fish_ticket_stat_area_summary.RDS”) %&gt;% mutate(fishery = gsub(“XR”, “TR”, fishery)) %&gt;% filter(substring(fishery, 1, 2) == “TR”) %&gt;% mutate(fishery = substring(fishery, 1, 4)) %&gt;% # add crab year add_crab_year(., date_correct = F) %&gt;% # rename fields rename(live_n = live_number, deadloss_n = deadloss_number, live_lb = live_lbs, deadloss_lb = deadloss_lbs) -&gt; ft_statarea</p>
+</div>
+<div class="section level2">
+<h2 id="incidental-directected-fish-ticket-report">incidental-directected fish ticket report<a class="anchor" aria-label="anchor" href="#incidental-directected-fish-ticket-report"></a>
+</h2>
+<p>read_csv(“../adfg_crab_observer/misc/data/fish_ticket_timeseries/Q_dir_inc_fish_ticket.csv”, skip = 2) %&gt;% janitor::clean_names() %&gt;% filter(grepl(“Total”, seasons)) %&gt;% filter(!grepl(“Grand”, seasons)) %&gt;% mutate(year = substring(seasons, 3, 4)) %&gt;% transmute(year, QT = wbt_directed_effort, QO = bss_directed_effort) %&gt;% left_join(read_csv(“../adfg_crab_observer/misc/data/fish_ticket_timeseries/T_dir_inc_fish_ticket.csv”, skip = 2) %&gt;% janitor::clean_names() %&gt;% filter(grepl(“Total”, seasons)) %&gt;% filter(!grepl(“Grand”, seasons)) %&gt;% mutate(year = substring(seasons, 3, 4)) %&gt;% transmute(year, TT = ebt_directed_effort, TR = bbr_directed_effort) %&gt;% full_join(readRDS(“../adfg_crab_observer/misc/data/fish_ticket_timeseries/fish_ticket_stat_area_summary_2_21_25.RDS”) %&gt;% filter(substring(fishery, 1, 2) == “XR”) %&gt;% mutate(year = substring(fishery, 3, 4)) %&gt;% group_by(year) %&gt;% summarise(XR = sum(pots, na.rm = T))), by = “year”) %&gt;% pivot_longer(2:ncol(.), names_to = “fish”, values_to = “effort”) %&gt;% mutate(fish = gsub(“XR”, “TR”, fish)) %&gt;% mutate(fishery = paste0(fish, year)) %&gt;% group_by(fishery) %&gt;% summarise(effort = sum(effort, na.rm = T)) %&gt;% # join to prerationalized doug pengilly data bind_rows(dir_effort_prerat) %&gt;% # add crab year add_crab_year(date_correct = F) %&gt;% # other fisheries bind_rows(readRDS(“../adfg_crab_observer/misc/data/fish_ticket_timeseries/fish_ticket_stat_area_summary_2_21_25.RDS”) %&gt;% filter(!(substring(fishery, 1, 2) %in% c(“QO”, “TT”, “TR”, “QT”, “XR”))) %&gt;% group_by(fishery, crab_year) %&gt;% summarise(effort = sum(pots, na.rm = T)) %&gt;% ungroup) %&gt;% arrange(fishery) %&gt;% # temporarily add CP98 (as QP) add_row(fishery = “QP98”, effort = 89500, crab_year = 1998) %&gt;% group_by(fishery, crab_year) %&gt;% summarise(effort = sum(effort, na.rm = T)) %&gt;% ungroup -&gt; dir_effort</p>
+</div>
+</div>
+<div class="section level1">
+<h1 id="retained-catch--">retained catch —-<a class="anchor" aria-label="anchor" href="#retained-catch--"></a>
+</h1>
+<p>get_retained_catch(ft_data = ft_statarea) %&gt;% write_csv(“./bbrkc/output/2025/retained_catch.csv”)</p>
+</div>
+<div class="section level1">
+<h1 id="total-catch--">total catch —-<a class="anchor" aria-label="anchor" href="#total-catch--"></a>
+</h1>
+<p>get_total_catch(pot_data = pot_sum, crab_data = obs_meas, ft_data = dir_effort, stock = “BBRKC”) %&gt;% write_csv(“./bbrkc/output/2025/total_catch.csv”)</p>
+</div>
+<div class="section level1">
+<h1 id="crab-fishery-discards--">crab fishery discards —-<a class="anchor" aria-label="anchor" href="#crab-fishery-discards--"></a>
+</h1>
+<p>get_discards(retained_catch = get_retained_catch(ft_data = ft_statarea), total_catch = get_total_catch(pot_data = pot_sum, crab_data = obs_meas, ft_data = dir_effort, stock = “BBRKC”), stock = “BBRKC”) %&gt;% write_csv(“./bbrkc/output/2025/discards.csv”)</p>
+</div>
+<div class="section level1">
+<h1 id="retained-size-comp--">retained size comp —-<a class="anchor" aria-label="anchor" href="#retained-size-comp--"></a>
+</h1>
+<p>get_dockside_comp(data = dock, by = NULL) %&gt;% write_csv(“./bbrkc/output/2025/retained_catch_composition.csv”)</p>
+</div>
+<div class="section level1">
+<h1 id="observer-size-comp--">observer size comp —-<a class="anchor" aria-label="anchor" href="#observer-size-comp--"></a>
+</h1>
+<p>get_observer_comp(data = obs_meas, by = “sex”) -&gt; obs_comp</p>
+<div class="section level2">
+<h2 id="directed-fishery">directed fishery<a class="anchor" aria-label="anchor" href="#directed-fishery"></a>
+</h2>
+<p>obs_comp %&gt;% filter(substring(fishery, 1, 2) == “TR”) %&gt;% write_csv(“./bbrkc/output/2025/directed_total_composition.csv”)</p>
+</div>
+<div class="section level2">
+<h2 id="e166-tanner-crab">e166 tanner crab<a class="anchor" aria-label="anchor" href="#e166-tanner-crab"></a>
+</h2>
+<p>obs_comp %&gt;% filter(substring(fishery, 1, 2) == “TT”) %&gt;% write_csv(“./bbrkc/output/2025/tanner_bycatch_composition.csv”)</p>
+<p>```</p>
+</div>
+</div>
+
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
