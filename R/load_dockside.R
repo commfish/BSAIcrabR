@@ -29,10 +29,11 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
     # stock specific
     if(stock == "BBRKC"){
       out %>%
-        mutate(fishery = gsub("XR|CR", "TR", fishery),
-               fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
+        mutate(fishery = gsub("XR|CR", "TR", fishery)) %>%
         filter(substring(fishery, 1, 2) == "TR") %>%
-        dplyr::select(-subdistrict) -> out
+        dplyr::select(-subdistrict) %>%
+        # remove erroneous sample
+        filter(!(crab_year == 1993 & fishery == "TR92")) -> out
     }
     if(stock %in% c("BSSC", "BSTC", "EBT", "WBT")){
       early_90s_tt <- c("EI89", "EI90", "EI91", "EI92", paste0("QT", 93:96))
@@ -42,12 +43,15 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
         # bbrkc test fish and cdq fisheries to TR
         # early tanner crab fisheries to QT or TT based on e166 line
         # fisheries without any dates in dockside data (make hard change)
-        mutate(fishery = gsub("QO05r", "QO05", fishery),
-               fishery = gsub("QO05o", "QO04", fishery),
+        mutate(#fishery = gsub("QO05r", "QO05", fishery),
+               #fishery = gsub("QO05o", "QO04", fishery),
                fishery = gsub("CO|EO", "QO", fishery),
                fishery = gsub("XR|CR", "TR", fishery),
                fishery = ifelse(fishery %in% early_90s_tt, paste0("QT", substring(fishery, 3, 4)), fishery),
-               fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
+               # gkc
+               fishery = gsub("XE", "OB", fishery),
+               fishery = ifelse(grepl("OB", fishery), paste0("OB", substring(crab_year, 3, 4)), fishery),
+               fishery = ifelse(grepl("RB", fishery), paste0("OB", substring(crab_year, 3, 4)), fishery)) %>%
         dplyr::select(-subdistrict) -> out
     }
     if(stock %in% c("AIGKC", "EAG", "WAG")){
