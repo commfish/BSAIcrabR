@@ -60,6 +60,8 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
         mutate(#fishery = gsub("QO05r", "QO05", fishery),
                #fishery = gsub("QO05o", "QO04", fishery),
                fishery = gsub("CO|EO", "QO", fishery),
+               # change QO pre-rationalization to QO05o
+               fishery = ifelse(fishery == "QO05" & sample_date <= mdy("6/30/2006"), "QO05o", fishery),
                # cdq rkc and bkc fisheries to PIBKC
                fishery = gsub("CK|CP", "QP", fishery),
                # bbrkc test fish and cdq fisheries to TR
@@ -71,6 +73,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
                fishery = ifelse(fishery == "OB08" & longitude < -174, "RB08", fishery),
                fishery = ifelse(grepl("OB", fishery), paste0("OB", substring(crab_year, 3, 4)), fishery),
                fishery = ifelse(grepl("RB", fishery), paste0("OB", substring(crab_year, 3, 4)), fishery)) %>%
+        filter(!(fishery == "TR92" & year(sample_date) == 1995)) %>%
         # fill in legal
         add_legal(., stock = stock) %>%
         # add regulatory group

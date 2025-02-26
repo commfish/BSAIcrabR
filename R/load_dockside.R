@@ -46,6 +46,8 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
         mutate(#fishery = gsub("QO05r", "QO05", fishery),
                #fishery = gsub("QO05o", "QO04", fishery),
                fishery = gsub("CO|EO", "QO", fishery),
+               # change QO pre-rationalization to QO05o
+               fishery = ifelse(fishery == "QO05" & sample_date <= mdy("6/30/2006"), "QO05o", fishery),
                fishery = gsub("XR|CR", "TR", fishery),
                fishery = ifelse(fishery %in% early_90s_tt, paste0("QT", substring(fishery, 3, 4)), fishery),
                # gkc
