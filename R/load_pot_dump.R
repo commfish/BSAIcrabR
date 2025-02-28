@@ -34,12 +34,10 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     if(stock == "BBRKC"){
       ## data mgmt specific to bbrkc
       out %>%
-        mutate(fishery = gsub("XR|CR", "TR", fishery)) %>%
+        mutate(fishery = gsub("XR|CR", "TR", fishery),
         # filter EI and QT fisheries in early 90s by stat areas e166
         fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea > 660000), paste0("QT", substring(fishery, 3, 4)), fishery),
-        fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea <= 660000), paste0("TT", substring(fishery, 3, 4)), fishery),
-        # combine all tanner e166 fishery codes
-        mutate(fishery = ifelse(fishery %in% early_90s_tt, gsub("EI|QT", "TT", fishery), fishery)) %>%
+        fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea <= 660000), paste0("TT", substring(fishery, 3, 4)), fishery)) %>%
                #fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
         dplyr::select(-subdistrict) %>%
         # remove erroneous sample
