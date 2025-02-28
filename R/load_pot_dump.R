@@ -32,13 +32,12 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
   if(clean == T){
     # stock specific
     if(stock == "BBRKC"){
-      ## fishery codes for early 90s tanner e166 fisheries
-      early_90s_tt <- c("EI91", "EI92", paste0("QT", 93:96))
       ## data mgmt specific to bbrkc
       out %>%
         mutate(fishery = gsub("XR|CR", "TR", fishery)) %>%
         # filter EI and QT fisheries in early 90s by stat areas e166
-        filter(!(fishery %in% early_90s_tt & (statarea > 660000 | statarea < 0))) %>%
+        fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea > 660000), paste0("QT", substring(fishery, 3, 4)), fishery),
+        fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea <= 660000), paste0("TT", substring(fishery, 3, 4)), fishery),
         # combine all tanner e166 fishery codes
         mutate(fishery = ifelse(fishery %in% early_90s_tt, gsub("EI|QT", "TT", fishery), fishery)) %>%
                #fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
@@ -47,8 +46,6 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
         filter(!(crab_year == 1993 & fishery == "TR92")) -> out
     }
     if(stock %in% c("BSSC", "BSTC", "WBT", "EBT")) {
-      ## fishery codes for early 90s tanner e166 fisheries
-      early_90s_tt <- c("EI91", "EI92", paste0("QT", 93:96))
       ## data mgmt specific to bssc
       out %>%
         # fix transition to rationalization yr
@@ -62,8 +59,9 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
                fishery = gsub("CK|CP", "QP", fishery),
                # bbrkc test fish and cdq fisheries to TR
                fishery = gsub("XR|CR", "TR", fishery),
-               fishery = ifelse((fishery %in% early_90s_tt) & (statarea > 660000 | statarea < 0), paste0("QT", substring(fishery, 3, 4)), fishery),
-               fishery = ifelse((fishery %in% early_90s_tt) & (statarea <= 660000 | statarea >= 0), paste0("TT", substring(fishery, 3, 4)), fishery),
+               # parse area for bstc fisheries
+               fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea > 660000), paste0("QT", substring(fishery, 3, 4)), fishery),
+               fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea <= 660000), paste0("TT", substring(fishery, 3, 4)), fishery),
                # gkc
                fishery = gsub("XE", "OB", fishery),
                fishery = ifelse(fishery == "OB08" & longitude < -174, "RB08", fishery),

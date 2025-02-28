@@ -24,11 +24,16 @@ get_retained_catch <- function(ft_data, by = NULL, units = "t") {
   if(!(units %in% c("t", "lb"))){stop("Do not recognize the units, use t or lb")}
 
   # get retained catch ----
+
   ft_data %>%
-    replace_na(list(live_n = 0, live_lb = 0, deadloss_n = 0, deadloss_lb = 0)) %>%
+    replace_na(list(tot_live_n = 0, tot_live_lb = 0, tot_deadloss_n = 0, tot_deadloss_lb = 0)) %>%
     group_by_at(c("crab_year", "fishery", by)) %>%
-    summarise(retained_n = sum(live_n + deadloss_n),
-              retained_wt = sum(live_lb + deadloss_lb) * unit_convert) %>% ungroup %>%
+    summarise(tot_retained_n = sum(tot_live_n + tot_deadloss_n),
+              tot_retained_wt = sum(tot_live_lb + tot_deadloss_lb) * unit_convert,
+              dir_retained_n = sum(dir_live_n),
+              dir_retained_wt = sum(dir_live_lb) * unit_convert,
+              inc_retained_n = sum(inc_live_n),
+              inc_retained_wt = sum(inc_live_lb) * unit_convert) %>% ungroup %>%
     filter(!is.na(fishery)) -> out
 
   return(out)
