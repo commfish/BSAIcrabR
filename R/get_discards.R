@@ -72,8 +72,10 @@ get_discards <- function(retained_catch, total_catch, stock) {
     # add discards
     mutate(discard_n = total_catch_n - retained_n,
            discard_wt = total_catch_wt - retained_wt,
-           discard_mortality_n = discard_n * handling_mortality + retained_n,
-           discard_mortality_wt = discard_wt * handling_mortality + retained_wt) %>%
+           discard_mortality_n = discard_n * handling_mortality,
+           discard_mortality_wt = discard_wt * handling_mortality,
+           total_mortality_n = discard_mortality_n + retained_n,
+           total_mortality_wt = discard_mortality_wt + retained_wt) %>%
     arrange(crab_year, fishery) -> out
 
   return(out)
