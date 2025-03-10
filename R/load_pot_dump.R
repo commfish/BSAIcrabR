@@ -18,13 +18,14 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     pot <- read_csv(path)
   }
 
+  if(!("subdistrict" %in% names(pot))){pot$subdistrict <- NA}
+  if(!("eastwest" %in% names(pot))){pot$eastwest <- NA}
+
   pot %>%
     # fix biotwine status data
     mutate(biotwine_ok = case_when(biotwine_ok == "-" ~ NA,
                                    biotwine_ok %in% c("n", "N") ~ "N",
                                    biotwine_ok %in% c("y", "Y") ~ "Y")) %>%
-    mutate(subdistrict = ifelse(!("subdistrict" %in% names(.)), NA, subdistrict),
-           eastwest = ifelse(!("eastwest" %in% names(.)), NA, eastwest)) %>%
     rename(sample_date = sampdate) %>%
     add_crab_year() %>%
     # reorder
@@ -77,8 +78,8 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
                fishery = ifelse(fishery == "OB08" & longitude < -174, "RB08", fishery),
                fishery = gsub("XE", "OB", fishery),
                fishery = paste0(substring(fishery, 1, 2), substring(crab_year, 3, 4))) %>%
-        mutate(fishery = ifelse(subdistrict == "EAG", gsub("RB", "OB", fishery),
-                                ifelse(subdistrict == "WAG", gsub("OB", "RB", fishery), fishery))) %>%
+        mutate(fishery = ifelse(subdistrict == "EAG", gsub("RB", "OB", fishery), fishery),
+               fishery = ifelse(subdistrict == "WAG", gsub("OB", "RB", fishery), fishery)) %>%
         # remove pots without district info
         filter(subdistrict != "-") -> out
     }

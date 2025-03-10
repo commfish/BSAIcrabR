@@ -9,7 +9,7 @@
 #'
 #' @export
 #'
-get_retained_catch <- function(ft_data, by = NULL, units = "t") {
+get_retained_catch <- function(ft_data, by = NULL, stock = NULL, units = "t") {
 
   # make sure fishery and crab_year are not in by ----
   by = by[!(by %in% c("fishery", "crab_year"))]
@@ -25,23 +25,33 @@ get_retained_catch <- function(ft_data, by = NULL, units = "t") {
 
   # get retained catch ----
 
-  ft_data %>%
-    group_by_at(c("crab_year", "fishery", by)) %>%
-    summarise(dir_retained_n = sum(dir_live_n, dir_deadloss_n, na.rm = T),
-              dir_retained_wt = sum(dir_live_lb, dir_deadloss_lb, na.rm = T) * unit_convert,
-              inc_retained_n = sum(inc_live_n, inc_deadloss_n, na.rm = T),
-              inc_retained_wt = sum(inc_live_lb, inc_deadloss_lb, na.rm = T) * unit_convert,
-              tot_retained_n = sum(tot_live_n, tot_deadloss_n, na.rm = T),
-              tot_retained_wt = sum(tot_live_lb, tot_deadloss_lb, na.rm = T) * unit_convert) %>% ungroup %>%
-    # NA for dir and inc pre-rationalization
-    # fix total in post rationalized years (most for xr/tr fisheries)
-    mutate(dir_retained_n = ifelse(crab_year < 2005, NA, dir_retained_n),
-           dir_retained_wt = ifelse(crab_year < 2005, NA, dir_retained_wt),
-           inc_retained_n = ifelse(crab_year < 2005, NA, inc_retained_n),
-           inc_retained_wt = ifelse(crab_year < 2005, NA, inc_retained_wt),
-           tot_retained_n = ifelse(crab_year > 2005, dir_retained_n + inc_retained_n, tot_retained_n),
-           tot_retained_wt = ifelse(crab_year > 2005, dir_retained_wt + inc_retained_wt, tot_retained_wt)) %>%
-    filter(!is.na(fishery)) -> out
+  if(is.null(stock) | !(stock %in% c("AIGKC", "WAG", "EAG"))) {
+    ft_data %>%
+      group_by_at(c("crab_year", "fishery", by)) %>%
+      summarise(dir_retained_n = sum(dir_live_n, dir_deadloss_n, na.rm = T),
+                dir_retained_wt = sum(dir_live_lb, dir_deadloss_lb, na.rm = T) * unit_convert,
+                inc_retained_n = sum(inc_live_n, inc_deadloss_n, na.rm = T),
+                inc_retained_wt = sum(inc_live_lb, inc_deadloss_lb, na.rm = T) * unit_convert,
+                tot_retained_n = sum(tot_live_n, tot_deadloss_n, na.rm = T),
+                tot_retained_wt = sum(tot_live_lb, tot_deadloss_lb, na.rm = T) * unit_convert) %>% ungroup %>%
+      # NA for dir and inc pre-rationalization
+      # fix total in post rationalized years (most for xr/tr fisheries)
+      mutate(dir_retained_n = ifelse(crab_year < 2005, NA, dir_retained_n),
+             dir_retained_wt = ifelse(crab_year < 2005, NA, dir_retained_wt),
+             inc_retained_n = ifelse(crab_year < 2005, NA, inc_retained_n),
+             inc_retained_wt = ifelse(crab_year < 2005, NA, inc_retained_wt),
+             tot_retained_n = ifelse(crab_year > 2005, dir_retained_n + inc_retained_n, tot_retained_n),
+             tot_retained_wt = ifelse(crab_year > 2005, dir_retained_wt + inc_retained_wt, tot_retained_wt)) %>%
+      filter(!is.na(fishery)) -> out
+  }
+  if(stock %in% c("AIGKC", "WAG", "EAG")) {
+    ft_data %>%
+      group_by_at(c("crab_year", "fishery", by)) %>%
+      summarise(tot_retained_n = sum(number_of_crab, na.rm = T),
+                tot_retained_wt = sum(landed_pounds, na.rm = T) * unit_convert) %>% ungroup -> out
+  }
+
+
 
   return(out)
 

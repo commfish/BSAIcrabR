@@ -2,7 +2,7 @@
 #'
 #' Clean latitude and longitude data across the dateline
 #' @param x Pot or observer data with columns longitude, latitude, and eastwest
-#' @return x with location information correctect across the date line to be negative
+#' @return x with location information correct across the date line to be negative
 #' @examples
 #' clean_lat_lon(pots)
 #' @export

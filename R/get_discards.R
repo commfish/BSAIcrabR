@@ -68,12 +68,12 @@ get_discards <- function(retained_catch, total_catch, stock) {
     # join to retained catch
     full_join(ret %>%
                 mutate(sex = 1), by = c("crab_year", "fishery", "sex")) %>%
-    replace_na(list(retained_n = 0, retained_wt = 0)) %>%
+    replace_na(list(retained_n = 0, retained_wt = 0, total_catch_n = 0, total_catch_wt = 0)) %>%
     # add discards
     mutate(discard_n = total_catch_n - retained_n,
            discard_wt = total_catch_wt - retained_wt,
-           discard_mortality_n = discard_n * handling_mortality,
-           discard_mortality_wt = discard_wt * handling_mortality,
+           discard_mortality_n = discard_n * (discard_n > 0) * handling_mortality,
+           discard_mortality_wt = discard_wt * (discard_wt > 0) * handling_mortality,
            total_mortality_n = discard_mortality_n + retained_n,
            total_mortality_wt = discard_mortality_wt + retained_wt) %>%
     arrange(crab_year, fishery) -> out

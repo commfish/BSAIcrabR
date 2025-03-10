@@ -18,10 +18,11 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
     dock <- read_csv(path)
   }
 
+  if(!("subdistrict" %in% names(dock))){dock$subdistrict <- NA}
+
   dock %>%
     # add crab year
     add_crab_year() %>%
-    mutate(subdistrict = ifelse(!("subdistrict" %in% names(.)), NA, subdistrict)) %>%
     # reorder
     transmute(crab_year, fishery, adfg, sample_date, subdistrict, spcode, size, legal, shell, numcrab) -> out
 
