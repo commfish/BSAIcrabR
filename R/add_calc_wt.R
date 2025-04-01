@@ -1,4 +1,4 @@
-#' Add Calculated Weight
+t#' Add Calculated Weight
 #'
 #' Add calculated weight based on weight at length parameters.
 #' @param x crab data that includes fields 'size', 'sex', and 'clutch' and 'maturity' for chionoecetes stocks (if use_observer = T) and 'crab_year' (if use_historic = T).
@@ -23,16 +23,20 @@ add_calc_wt <- function(x, stock, units = "t") {
   if(stock %in% c("BBRKC", "PIRKC", "WAIRKC", "EAG", "WAG", "AIGKC", "PIGKC", "SMBKC", "PIBKC")) {
     x %>%
       mutate(a = case_when(stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 1 ~ 0.000403,
-                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size >= 90 ~ 0.003593,
-                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size < 90 ~ 0.000408,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & (maturity == 1 | clutch > 0) ~ 0.003593,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & (maturity == 0 | clutch == 0) ~ 0.000408,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & ((clutch < 0  | (is.na(maturity) & is.na(clutch))) & size >= 90) ~ 0.003593,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & ((clutch < 0  | (is.na(maturity) & is.na(clutch))) & size < 90) ~ 0.000408,
                            stock %in% c("PIGKC") & sex == 1 ~ 0.000271236,
                            stock %in% c("EAG", "WAG", "AIGKC") & sex == 1 ~ 0.0001445,
                            stock %in% c("EAG", "WAG", "AIGKC", "PIGKC") & sex == 2 ~ 0.001424,
                            stock %in% c("SMBKC", "PIBKC") & sex == 1 ~ 0.000502,
                            stock %in% c("SMBKC", "PIBKC") & sex == 2 ~ 0.02065)) %>%
       mutate(b = case_when(stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 1 ~ 3.141334,
-                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size >= 90 ~ 2.666076,
-                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & size < 90 ~ 3.127956,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & (maturity == 1 | clutch > 0) ~ 2.666076,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & (maturity == 0 | clutch == 0) ~ 3.127956,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & ((clutch < 0 | (is.na(maturity) & is.na(clutch))) & size >= 90) ~ 2.666076,
+                           stock %in% c("BBRKC", "PIRKC", "WAIRKC") & sex == 2 & ((clutch < 0  | (is.na(maturity) & is.na(clutch))) & size < 90) ~ 3.127956,
                            stock %in% c("PIGKC") & sex == 1 ~ 3.167577,
                            stock %in% c("EAG", "WAG", "AIGKC") & sex == 1 ~ 3.28113,
                            stock %in% c("EAG", "WAG", "AIGKC", "PIGKC") & sex == 2 ~ 2.781,
