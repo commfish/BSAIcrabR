@@ -4,7 +4,7 @@
 \alias{get_discards}
 \title{Get Directed Discards}
 \usage{
-get_discards(retained_catch, total_catch, stock, handling_mortality = 0.3)
+get_discards(retained_catch, total_catch, stock)
 }
 \arguments{
 \item{retained_catch}{NULL. Output of \code{get_retaied_catch()}.}
@@ -20,6 +20,6 @@ Data frame including crab year, fishery, sex, discards, and discard mortality.
 Estimate directed fishery discards by sex using subtraction method
 }
 \examples{
-get_discards(retained_catch, total_catch, stock = "BBRKC", handling_mortality = 0.3)
+get_discards(retained_catch, total_catch, stock = "BBRKC")
 
 }

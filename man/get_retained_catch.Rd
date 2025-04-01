@@ -4,7 +4,7 @@
 \alias{get_retained_catch}
 \title{Get Retained Catch}
 \usage{
-get_retained_catch(ft_data, by = NULL, units = "t")
+get_retained_catch(ft_data, by = NULL, stock = NULL, units = "t")
 }
 \arguments{
 \item{ft_data}{NULL. Fish ticket data with fields 'crab_year', 'fishery', 'effort' and whatever variables are specified in by.}

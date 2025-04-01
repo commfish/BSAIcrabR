@@ -10,7 +10,7 @@ clean_lat_lon(x)
 \item{x}{Pot or observer data with columns longitude, latitude, and eastwest}
 }
 \value{
-x with location information correctect across the date line to be negative
+x with location information correct across the date line to be negative
 }
 \description{
 Clean latitude and longitude data across the dateline
