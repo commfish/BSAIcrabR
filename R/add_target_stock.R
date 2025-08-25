@@ -13,6 +13,7 @@ add_target_stock <- function(x, col = fishery) {
     dplyr::mutate(target_stock = case_when(substring({{col}}, 1, 2) == "QO" ~ "BSSC",
                                      substring({{col}}, 1, 2) == "QB" ~ "PIGKC",
                                      substring({{col}}, 1, 2) == "QP" ~ "SMBKC_PIBKC",
+                                     substring({{col}}, 1, 2) == "SB" ~ "SMBKC",
                                      substring({{col}}, 1, 2) == "QR" ~ "PIRKC",
                                      substring({{col}}, 1, 2) == "QT" ~ "WBT",
                                      substring({{col}}, 1, 2) == "TT" ~ "EBT",

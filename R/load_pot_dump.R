@@ -44,6 +44,23 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
         # remove erroneous sample
         filter(!(crab_year == 1993 & fishery == "TR92")) -> out
     }
+    if(stock == "PIRKC"){
+      ## data mgmt specific to pirkc
+      out %>%
+        mutate(fishery = gsub("XR|CR", "TR", fishery),
+               fishery = gsub("CO|EO", "QO", fishery),
+               # cdq rkc and bkc fisheries to PIBKC
+               fishery = gsub("CK|CP", "QP", fishery),
+               # filter EI and QT fisheries in early 90s by stat areas e166
+               fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea > 660000), paste0("QT", substring(fishery, 3, 4)), fishery),
+               fishery = ifelse(grepl("EI|QT|TT", fishery) & (statarea <= 660000), paste0("TT", substring(fishery, 3, 4)), fishery),
+              # fishery = ifelse(grepl("QO", fishery) & (statarea > 660000), paste0("QO", substring(fishery, 3, 4)), fishery),
+              # fishery = ifelse(grepl("QO", fishery) & (statarea <= 660000), NA, fishery)) %>%
+        ) %>%
+        dplyr::select(-subdistrict)  %>%
+        # remove erroneous sample
+        filter(!(crab_year == 1993 & fishery == "TR92")) -> out
+    }
     if(stock %in% c("BSSC", "BSTC", "WBT", "EBT")) {
       ## data mgmt specific to bssc
       out %>%
@@ -98,7 +115,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     }
 
 
-    if(stock %in% c("SMBKC", "PIBKC", "PIRKC", "WAIRKC")){
+    if(stock %in% c("SMBKC", "PIBKC", "WAIRKC")){
       stop(paste0("No method for ", stock, " yet !!"))
     }
 
