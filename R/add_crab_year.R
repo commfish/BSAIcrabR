@@ -18,6 +18,7 @@ add_crab_year <- function(x, date_correct = T, date_format = "mdy") {
 
   if(class(out$sample_date) == "Date") {
     out %>%
+      dplyr::mutate(sample_date = ifelse(sample_date == mdy("9/9/9999"), NA, sample_date)) %>%
       # adjust crab year
       dplyr::mutate(crab_year = case_when(sample_date > mdy(paste0("6/30/", crab_year + 1)) ~ crab_year + 1,
                                           sample_date > mdy(paste0("6/30/", crab_year)) & sample_date <= mdy(paste0("6/30/", crab_year + 1)) ~ crab_year,
@@ -26,6 +27,7 @@ add_crab_year <- function(x, date_correct = T, date_format = "mdy") {
   }
   if(class(out$sample_date) != "Date") {
     out %>%
+      dplyr::mutate(sample_date = ifelse(sample_date == "9/9/9999", NA, sample_date)) %>%
       # coerce sample date to date format
       dplyr::mutate(sample_date = as_date(parse_date_time(sample_date, orders = date_format))) %>%
       # adjust crab year

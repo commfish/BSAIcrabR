@@ -22,7 +22,7 @@ get_discards <- function(retained_catch, total_catch, stock) {
   if(stock %in% c("BBRKC", "EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")) {handling_mortality <- 0.2}
   if(stock %in% c("BBRKC")) {non_dir_hm <- 0.25}
   if(stock %in% c("EAG", "WAG", "PIGKC", "SMBKC", "PIBKC", "PIRKC", "WAIRKC")) {non_dir_hm <- 0.2}
-  if(stock %in% c("BSSC")) {handling_mortality <- 0.3; non_dir_hm <- 0.3}
+  if(stock %in% c("BSSC", "HYBRIDS")) {handling_mortality <- 0.3; non_dir_hm <- 0.3}
   if(stock %in% c("WBT", "EBT", "BSTC")) {handling_mortality <- 0.321;  non_dir_hm <- 0.321}
 
   # summarise total catch
@@ -48,6 +48,7 @@ get_discards <- function(retained_catch, total_catch, stock) {
                              names_pattern = "(.*)_retained_(.*)") %>%
                 # change fishery in the incidental catch
                 mutate(fishery = ifelse(stock == "BSSC" & type == "inc", gsub("QO", "QT", fishery), fishery),
+                       fishery = ifelse(stock == "HYBRIDS"  & type == "inc", gsub("QO", "QT", fishery), fishery),
                        fishery = ifelse(stock == "WBT" & type == "inc", gsub("QT", "QO", fishery), fishery),
                        fishery = ifelse(stock == "EBT" & type == "inc", gsub("TT", "TR", fishery), fishery),
                        fishery = ifelse(stock == "BBRKC" & type == "inc", gsub("TR", "TT", fishery), fishery),

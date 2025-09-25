@@ -36,7 +36,7 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
         # remove erroneous sample
         filter(!(crab_year == 1993 & fishery == "TR92")) -> out
     }
-    if(stock %in% c("BSSC", "BSTC", "EBT", "WBT")){
+    if(stock %in% c("BSSC", "BSTC", "EBT", "WBT", "HYBRIDS")){
       early_90s_tt <- c("EI89", "EI90", "EI91", "EI92", paste0("QT", 93:96))
       out %>%
         # fix transition to rationalization yr

@@ -61,7 +61,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
         # remove erroneous sample
         filter(!(crab_year == 1993 & fishery == "TR92")) -> out
     }
-    if(stock %in% c("BSSC", "BSTC", "WBT", "EBT")) {
+    if(stock %in% c("BSSC", "BSTC", "WBT", "EBT", "HYBRIDS")) {
       ## data mgmt specific to bssc
       out %>%
         # fix transition to rationalization yr
