@@ -136,6 +136,7 @@ get_total_catch <- function(pot_data, crab_data, ft_data, stock, by = NULL, lump
     dplyr::select(-fish_type, -avg_wt_mean) %>%
     # fill in prop if by is NULL
     {if(is.null(by)) {replace_na(., list(prop = 1))} else{.}} %>%
+    {if(by == "statarea" & length(by) == 1) {mutate(., prop = 1)} else{.}} %>%
     # scale count
     # add observer cpue
     mutate(count = count * prop,
