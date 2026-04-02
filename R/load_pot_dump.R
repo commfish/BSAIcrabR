@@ -20,6 +20,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
 
   if(!("subdistrict" %in% names(pot))){pot$subdistrict <- NA}
   if(!("eastwest" %in% names(pot))){pot$eastwest <- NA}
+  if(!("spcode" %in% names(pot))){pot$spcode <- NA}
 
   pot %>%
     # fix biotwine status data
@@ -29,7 +30,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     rename(sample_date = sampdate) %>%
     add_crab_year() %>%
     # reorder
-    transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, subdistrict, latitude, longitude, eastwest, depth, soaktime, gearcode, ring, mesh, biotwine_ok, female, sublegal, tot_legal, msr_pot) -> out
+    transmute(crab_year, fishery, trip, adfg, sample_date, spn, statarea, subdistrict, latitude, longitude, eastwest, depth, soaktime, gearcode, ring, mesh, biotwine_ok, spcode, female, sublegal, tot_legal, msr_pot) -> out
   if(clean == T){
     # stock specific
     if(stock == "BBRKC"){
