@@ -131,7 +131,15 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     }
     if(stock == "PIGKC") {
       out %>%
-        mutate(fishery = gsub("CO|EO", "QO", fishery)) %>%
+        # fix crab year to be calendar year
+        mutate(crab_year = ifelse(grepl("QB|QG", fishery), year(sample_date), crab_year)) %>%
+        # fill in legal
+        add_legal(., stock = stock) %>%
+        mutate(fishery = gsub("CO|EO", "QO", fishery),
+               # add regulatory group
+               group = case_when(sex == 2 ~ "female",
+                                 sex == 1 & legal == 0 ~ "sublegal_male",
+                                 sex == 1 & legal == 1 ~ "legal_male")) %>%
         dplyr::select(-subdistrict) -> out
     }
 

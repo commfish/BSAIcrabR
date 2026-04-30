@@ -111,6 +111,8 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     }
     if(stock == "PIGKC") {
       out %>%
+        # fix crab year to be calendar year
+        mutate(crab_year = ifelse(grepl("QB|QG", fishery), year(sample_date), crab_year)) %>%
         mutate(fishery = gsub("CO|EO", "QO", fishery)) %>%
         dplyr::select(-subdistrict) -> out
     }
@@ -130,3 +132,4 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
   return(out)
 
 }
+

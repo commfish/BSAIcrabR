@@ -81,6 +81,8 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
     }
     if(stock %in% c("PIGKC")){
       out %>%
+        # fix crab year to be calendar year
+        mutate(crab_year = ifelse(grepl("QB|QG", fishery), year(sample_date), crab_year)) %>%
         dplyr::select(-subdistrict) -> out
     }
 
