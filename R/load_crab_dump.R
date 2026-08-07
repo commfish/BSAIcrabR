@@ -103,7 +103,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     }
 
 
-    if(stock %in% c("AIGKC", "EAG", "WAG")) {
+    if(stock %in% c("AIGKC", "EAG", "WAG", "WAIRKC")) {
       ## data mgmt specific to gkc
       out %>%
         clean_lat_lon() %>%

@@ -58,7 +58,7 @@ load_dockside <- function(path, stock, database_pull = F, clean = T) {
                crab_year = ifelse(grepl("QO", fishery) & is.na(sample_date), 1899 + as.numeric(substring(fishery, 3, 4)), crab_year) ) %>%
         dplyr::select(-subdistrict) -> out
     }
-    if(stock %in% c("AIGKC", "EAG", "WAG")){
+    if(stock %in% c("AIGKC", "EAG", "WAG", "WAIRKC")){
       out %>%
         # make XE fisheries EAG
         mutate(subdistrict = ifelse(substring(fishery, 1, 2) == "XE", "EAG", subdistrict)) %>%
