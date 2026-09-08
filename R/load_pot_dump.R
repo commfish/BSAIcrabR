@@ -118,7 +118,7 @@ load_pot_dump <- function(path, stock, database_pull = F, clean = T) {
     }
 
 
-    if(stock %in% c("SMBKC", "PIBKC", "WAIRKC")){
+    if(stock %in% c("SMBKC", "PIBKC")){
       stop(paste0("No method for ", stock, " yet !!"))
     }
 
