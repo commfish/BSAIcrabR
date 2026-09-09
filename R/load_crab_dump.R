@@ -49,7 +49,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
         # remove erroneous sample
         filter(!(crab_year == 1993 & fishery == "TR92")) -> out
     }
-    if(stock %in% c("BSSC", "BSTC", "WBT", "EBT", "HYBRIDS")) {
+    if(stock %in% c("BSSC", "BSTC", "WBT", "EBT", "HYBRIDS", "SMBKC")) {
       ## data mgmt specific to bssc
       out %>%
         # fix transition to rationalization yr
@@ -144,7 +144,7 @@ load_crab_dump <- function(path, stock, database_pull = F, clean = T) {
     }
 
 
-    if(stock %in% c("SMBKC", "PIBKC")){
+    if(stock %in% c("PIBKC")){
       stop(paste0("No method for ", stock, " yet !!"))
     }
 
